@@ -21,7 +21,7 @@ dependencies = [
 
 [[package]]
 name = "heapz"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "rand",
 ]

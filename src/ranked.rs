@@ -331,11 +331,13 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
     fn link(&mut self, node_a: Position, node_b: Position) -> Position {
         if node_b != node_a {
             match (node_a, node_b) {
-                (Some(_), Some(_)) => if self.compare(node_a, node_b) {
-                    self.merge_trees(node_a, node_b)
-                } else {
-                    self.merge_trees(node_b, node_a)
-                },
+                (Some(_), Some(_)) => {
+                    if self.compare(node_a, node_b) {
+                        self.merge_trees(node_a, node_b)
+                    } else {
+                        self.merge_trees(node_b, node_a)
+                    }
+                }
                 (Some(_), None) => node_a,
                 (None, Some(_)) => node_b,
                 _ => None,

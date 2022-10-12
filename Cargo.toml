@@ -6,6 +6,8 @@ license-file = "LICENSE.md"
 description = "Heap/Priority Queue implementations"
 repository = "https://github.com/Ruddickmg/heapz"
 readme = "README.md"
+keywords = ["heap", "priority", "queue", "rp-heap", "pairing-heap", "ranked-pairing-heap"]
+categories = ["algorithms", "data-structures", "wasm"]
 
 [dev-dependencies]
 rand = "0.8.5"

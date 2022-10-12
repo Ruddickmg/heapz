@@ -22,6 +22,7 @@ workflows:
   ci-cd:
     jobs:
       - check_formatting
+      - check_wasm_support
       - build
       - test
       - check_version:
@@ -46,13 +47,16 @@ jobs:
             - "~/.cargo"
             - "./target"
 
-  build-wasm:
+  check_wasm_support:
     executor: rust-app
     steps:
       - checkout
       - run:
-          name: Wasm Build
-          command: cargo build --target wasm32-unknown-unknown
+          name: Add wasm target
+          command: rustup target add wasm32-unknown-unknown
+      - run:
+          name: Verify code can be built in wasm
+          command: cargo check --target wasm32-unknown-unknown
 
   check_version:
     executor: ubuntu

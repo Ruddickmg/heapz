@@ -1,0 +1,90 @@
+version: 2.1
+
+orbs:
+  rust: circleci/rust@1.6.0
+
+#-----------------------------------------------------------------------------------------------------------------------------
+
+executors:
+  rust-app:
+    environment:
+      PIPELINE_NUM: << pipeline.number >>
+      TZ: "America/Los_Angeles"
+    docker:
+      - image: cimg/rust:1.56.0
+  ubuntu:
+    environment:
+      PIPELINE_NUM: << pipeline.number >>
+      TZ: "America/Los_Angeles"
+    machine:
+      image: ubuntu-1604:202007-01
+      docker_layer_caching: true
+
+#-----------------------------------------------------------------------------------------------------------------------------
+
+workflows:
+  ci-cd:
+    jobs:
+      - check_formatting
+      - build
+      - test
+      - check_version:
+          filters:
+            branches:
+              ignore:
+                - main
+
+ #----------------------------------------------------------------------------------------------------------------------------
+
+jobs:
+  build:
+    executor: rust-app
+    steps:
+      - checkout
+      - restore_cache:
+          key: project-cache
+      - run:
+          name: Stable Build
+          command: cargo build
+      - save_cache:
+          key: project-cache
+          paths:
+            - "~/.cargo"
+            - "./target"
+
+  #-----------------------------------------------------------------------------------------------------------------------------
+
+  check_version:
+    executor: ubuntu
+    environment:
+      MASTER_BRANCH_URL: git@github.com:Ruddickmg/heapz.git
+    steps:
+      - checkout
+      - run:
+          name: Checkout Master
+          command: git clone "$MASTER_BRANCH_URL"
+      - run:
+          name: Check that version has changed
+          command: |
+            export MASTER_VERSION="$(cat ./heapz/Cargo.toml | grep -oP '^version = "\K[^"]+')"
+            export BRANCH_VERSION="$(cat ./Cargo.toml | grep -oP '^version = "\K[^"]+')"
+            if [ "$MASTER_VERSION" = "$BRANCH_VERSION" ]; then exit 1; else exit 0; fi
+
+  #-----------------------------------------------------------------------------------------------------------------------------
+
+  check_formatting:
+    executor: rust-app
+    steps:
+      - checkout
+      - run:
+          name: Check formatting
+          command: cargo fmt -- --check
+
+  #-----------------------------------------------------------------------------------------------------------------------------
+
+  test:
+    executor: ubuntu
+    steps:
+      - checkout
+      - rust/install
+      - rust/test

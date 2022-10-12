@@ -26,9 +26,9 @@ workflows:
       - build
       - test
       - publish:
-#          filters:
-#            branches:
-#              only: main
+          filters:
+            branches:
+              only: main
           requires:
             - check_formatting
             - check_wasm_support
@@ -51,9 +51,9 @@ jobs:
       - run:
           name: Verify publish will work
           command: cargo publish --dry-run
-#      - run:
-#          name: Publish
-#          command: cargo publish
+      - run:
+          name: Publish
+          command: cargo publish
 
   build:
     executor: rust-app

@@ -58,29 +58,36 @@ mod push {
 
     #[test]
     fn adds_a_higher_item_to_the_heap_behind_a_lower_in_a_min_heap() {
-        common::push::adds_a_higher_item_to_the_heap_behind_a_lower_in_a_min_heap(PairingHeap::min());
+        common::push::adds_a_higher_item_to_the_heap_behind_a_lower_in_a_min_heap(
+            PairingHeap::min(),
+        );
     }
 
     #[test]
     fn adds_a_higher_item_to_the_heap_before_a_lower_in_a_max_heap() {
-        common::push::adds_a_higher_item_to_the_heap_before_a_lower_in_a_max_heap(PairingHeap::max());
+        common::push::adds_a_higher_item_to_the_heap_before_a_lower_in_a_max_heap(
+            PairingHeap::max(),
+        );
     }
 
     #[test]
     fn adds_a_lower_item_to_the_heap_before_a_higher_in_a_min_heap() {
-        common::push::adds_a_lower_item_to_the_heap_before_a_higher_in_a_min_heap(PairingHeap::min());
+        common::push::adds_a_lower_item_to_the_heap_before_a_higher_in_a_min_heap(
+            PairingHeap::min(),
+        );
     }
 
     #[test]
     fn adds_a_lower_item_to_the_heap_behind_a_higher_in_a_max_heap() {
-        common::push::adds_a_lower_item_to_the_heap_behind_a_higher_in_a_max_heap(PairingHeap::max());
+        common::push::adds_a_lower_item_to_the_heap_behind_a_higher_in_a_max_heap(
+            PairingHeap::max(),
+        );
     }
 }
 
-
 mod top {
-    use heapz::PairingHeap;
     use super::common;
+    use heapz::PairingHeap;
 
     #[test]
     fn returns_the_first_value_in_a_max_heap() {
@@ -99,8 +106,8 @@ mod top {
 }
 
 mod size {
-    use heapz::PairingHeap;
     use super::common;
+    use heapz::PairingHeap;
 
     #[test]
     fn returns_the_correct_size_of_a_heap_after_adding_elements() {
@@ -109,6 +116,8 @@ mod size {
 
     #[test]
     fn returns_the_correct_size_of_a_heap_after_removing_an_element() {
-        common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(PairingHeap::min());
+        common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(
+            PairingHeap::min(),
+        );
     }
 }

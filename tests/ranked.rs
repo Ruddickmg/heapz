@@ -6,17 +6,21 @@ use heapz::RankedPairingHeap;
 
 mod multi_pass_min {
     mod delete {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn delete_an_element_by_key() {
-            common::delete::will_delete_a_specific_element_by_key_from_min_heap(RankedPairingHeap::multi_pass_min());
+            common::delete::will_delete_a_specific_element_by_key_from_min_heap(
+                RankedPairingHeap::multi_pass_min(),
+            );
         }
 
         #[test]
         fn delete_an_element_by_key_after_pop() {
-            common::delete::will_delete_a_specific_element_by_key_from_min_heap_after_pop(RankedPairingHeap::multi_pass_min());
+            common::delete::will_delete_a_specific_element_by_key_from_min_heap_after_pop(
+                RankedPairingHeap::multi_pass_min(),
+            );
         }
     }
 
@@ -26,18 +30,22 @@ mod multi_pass_min {
 
         #[test]
         fn updates_an_element_by_key() {
-            common::update::will_update_a_specific_element_by_key_in_a_min_heap(RankedPairingHeap::multi_pass_min());
+            common::update::will_update_a_specific_element_by_key_in_a_min_heap(
+                RankedPairingHeap::multi_pass_min(),
+            );
         }
 
         #[test]
         fn updates_an_element_by_key_after_pop() {
-            common::update::will_update_a_specific_element_by_key_in_a_min_heap_after_pop(RankedPairingHeap::multi_pass_min());
+            common::update::will_update_a_specific_element_by_key_in_a_min_heap_after_pop(
+                RankedPairingHeap::multi_pass_min(),
+            );
         }
     }
 
     mod pop {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn removes_the_first_value_from_heap() {
@@ -56,13 +64,15 @@ mod multi_pass_min {
 
         #[test]
         fn returns_all_elements_from_largest_to_smallest() {
-            common::pop::returns_all_elements_from_smallest_to_largest_in_a_min_heap(RankedPairingHeap::multi_pass_min());
+            common::pop::returns_all_elements_from_smallest_to_largest_in_a_min_heap(
+                RankedPairingHeap::multi_pass_min(),
+            );
         }
     }
 
     mod push {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn adds_a_value_to_the_heap() {
@@ -71,12 +81,16 @@ mod multi_pass_min {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::push::adds_a_higher_item_to_the_heap_behind_a_lower_in_a_min_heap(RankedPairingHeap::multi_pass_min());
+            common::push::adds_a_higher_item_to_the_heap_behind_a_lower_in_a_min_heap(
+                RankedPairingHeap::multi_pass_min(),
+            );
         }
 
         #[test]
         fn adds_a_lower_item_to_the_heap_before_a_higher() {
-            common::push::adds_a_lower_item_to_the_heap_before_a_higher_in_a_min_heap(RankedPairingHeap::multi_pass_min());
+            common::push::adds_a_lower_item_to_the_heap_before_a_higher_in_a_min_heap(
+                RankedPairingHeap::multi_pass_min(),
+            );
         }
     }
 
@@ -101,45 +115,56 @@ mod multi_pass_min {
 
         #[test]
         fn returns_the_correct_size_of_a_heap_after_adding_elements() {
-            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(RankedPairingHeap::multi_pass_min());
+            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(
+                RankedPairingHeap::multi_pass_min(),
+            );
         }
 
         #[test]
         fn returns_the_first_value_in_a_heap() {
-            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(RankedPairingHeap::multi_pass_min());
+            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(
+                RankedPairingHeap::multi_pass_min(),
+            );
         }
     }
 }
 
-
 mod multi_pass_min2 {
     mod delete {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn delete_an_element_by_key() {
-            common::delete::will_delete_a_specific_element_by_key_from_min_heap(RankedPairingHeap::multi_pass_min2());
+            common::delete::will_delete_a_specific_element_by_key_from_min_heap(
+                RankedPairingHeap::multi_pass_min2(),
+            );
         }
 
         #[test]
         fn delete_an_element_by_key_after_pop() {
-            common::delete::will_delete_a_specific_element_by_key_from_min_heap_after_pop(RankedPairingHeap::multi_pass_min2());
+            common::delete::will_delete_a_specific_element_by_key_from_min_heap_after_pop(
+                RankedPairingHeap::multi_pass_min2(),
+            );
         }
     }
 
     mod update {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn updates_an_element_by_key() {
-            common::update::will_update_a_specific_element_by_key_in_a_min_heap(RankedPairingHeap::multi_pass_min2());
+            common::update::will_update_a_specific_element_by_key_in_a_min_heap(
+                RankedPairingHeap::multi_pass_min2(),
+            );
         }
 
         #[test]
         fn updates_an_element_by_key_after_pop() {
-            common::update::will_update_a_specific_element_by_key_in_a_min_heap_after_pop(RankedPairingHeap::multi_pass_min2());
+            common::update::will_update_a_specific_element_by_key_in_a_min_heap_after_pop(
+                RankedPairingHeap::multi_pass_min2(),
+            );
         }
     }
 
@@ -164,7 +189,9 @@ mod multi_pass_min2 {
 
         #[test]
         fn returns_all_elements_from_largest_to_smallest() {
-            common::pop::returns_all_elements_from_smallest_to_largest_in_a_min_heap(RankedPairingHeap::multi_pass_min2());
+            common::pop::returns_all_elements_from_smallest_to_largest_in_a_min_heap(
+                RankedPairingHeap::multi_pass_min2(),
+            );
         }
     }
 
@@ -179,12 +206,16 @@ mod multi_pass_min2 {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::push::adds_a_higher_item_to_the_heap_behind_a_lower_in_a_min_heap(RankedPairingHeap::multi_pass_min2());
+            common::push::adds_a_higher_item_to_the_heap_behind_a_lower_in_a_min_heap(
+                RankedPairingHeap::multi_pass_min2(),
+            );
         }
 
         #[test]
         fn adds_a_lower_item_to_the_heap_before_a_higher() {
-            common::push::adds_a_lower_item_to_the_heap_before_a_higher_in_a_min_heap(RankedPairingHeap::multi_pass_min2());
+            common::push::adds_a_lower_item_to_the_heap_before_a_higher_in_a_min_heap(
+                RankedPairingHeap::multi_pass_min2(),
+            );
         }
     }
 
@@ -209,45 +240,56 @@ mod multi_pass_min2 {
 
         #[test]
         fn returns_the_correct_size_of_a_heap_after_adding_elements() {
-            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(RankedPairingHeap::multi_pass_min2());
+            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(
+                RankedPairingHeap::multi_pass_min2(),
+            );
         }
 
         #[test]
         fn returns_the_first_value_in_a_heap() {
-            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(RankedPairingHeap::multi_pass_min2());
+            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(
+                RankedPairingHeap::multi_pass_min2(),
+            );
         }
     }
 }
 
-
 mod single_pass_min {
     mod delete {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn delete_an_element_by_key() {
-            common::delete::will_delete_a_specific_element_by_key_from_min_heap(RankedPairingHeap::single_pass_min());
+            common::delete::will_delete_a_specific_element_by_key_from_min_heap(
+                RankedPairingHeap::single_pass_min(),
+            );
         }
 
         #[test]
         fn delete_an_element_by_key_after_pop() {
-            common::delete::will_delete_a_specific_element_by_key_from_min_heap_after_pop(RankedPairingHeap::single_pass_min());
+            common::delete::will_delete_a_specific_element_by_key_from_min_heap_after_pop(
+                RankedPairingHeap::single_pass_min(),
+            );
         }
     }
 
     mod update {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn updates_an_element_by_key() {
-            common::update::will_update_a_specific_element_by_key_in_a_min_heap(RankedPairingHeap::single_pass_min());
+            common::update::will_update_a_specific_element_by_key_in_a_min_heap(
+                RankedPairingHeap::single_pass_min(),
+            );
         }
 
         #[test]
         fn updates_an_element_by_key_after_pop() {
-            common::update::will_update_a_specific_element_by_key_in_a_min_heap_after_pop(RankedPairingHeap::single_pass_min());
+            common::update::will_update_a_specific_element_by_key_in_a_min_heap_after_pop(
+                RankedPairingHeap::single_pass_min(),
+            );
         }
     }
 
@@ -272,7 +314,9 @@ mod single_pass_min {
 
         #[test]
         fn returns_all_elements_from_largest_to_smallest() {
-            common::pop::returns_all_elements_from_smallest_to_largest_in_a_min_heap(RankedPairingHeap::single_pass_min());
+            common::pop::returns_all_elements_from_smallest_to_largest_in_a_min_heap(
+                RankedPairingHeap::single_pass_min(),
+            );
         }
     }
 
@@ -287,12 +331,16 @@ mod single_pass_min {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::push::adds_a_higher_item_to_the_heap_behind_a_lower_in_a_min_heap(RankedPairingHeap::single_pass_min());
+            common::push::adds_a_higher_item_to_the_heap_behind_a_lower_in_a_min_heap(
+                RankedPairingHeap::single_pass_min(),
+            );
         }
 
         #[test]
         fn adds_a_lower_item_to_the_heap_before_a_higher() {
-            common::push::adds_a_lower_item_to_the_heap_before_a_higher_in_a_min_heap(RankedPairingHeap::single_pass_min());
+            common::push::adds_a_lower_item_to_the_heap_before_a_higher_in_a_min_heap(
+                RankedPairingHeap::single_pass_min(),
+            );
         }
     }
 
@@ -317,45 +365,56 @@ mod single_pass_min {
 
         #[test]
         fn returns_the_correct_size_of_a_heap_after_adding_elements() {
-            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(RankedPairingHeap::single_pass_min());
+            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(
+                RankedPairingHeap::single_pass_min(),
+            );
         }
 
         #[test]
         fn returns_the_first_value_in_a_heap() {
-            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(RankedPairingHeap::single_pass_min());
+            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(
+                RankedPairingHeap::single_pass_min(),
+            );
         }
     }
 }
 
-
 mod single_pass_min2 {
     mod delete {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn delete_an_element_by_key() {
-            common::delete::will_delete_a_specific_element_by_key_from_min_heap(RankedPairingHeap::single_pass_min2());
+            common::delete::will_delete_a_specific_element_by_key_from_min_heap(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
 
         #[test]
         fn delete_an_element_by_key_after_pop() {
-            common::delete::will_delete_a_specific_element_by_key_from_min_heap_after_pop(RankedPairingHeap::single_pass_min2());
+            common::delete::will_delete_a_specific_element_by_key_from_min_heap_after_pop(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
     }
 
     mod update {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn updates_an_element_by_key() {
-            common::update::will_update_a_specific_element_by_key_in_a_min_heap(RankedPairingHeap::single_pass_min2());
+            common::update::will_update_a_specific_element_by_key_in_a_min_heap(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
 
         #[test]
         fn updates_an_element_by_key_after_pop() {
-            common::update::will_update_a_specific_element_by_key_in_a_min_heap_after_pop(RankedPairingHeap::single_pass_min2());
+            common::update::will_update_a_specific_element_by_key_in_a_min_heap_after_pop(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
     }
     mod pop {
@@ -364,12 +423,16 @@ mod single_pass_min2 {
 
         #[test]
         fn removes_the_first_value_from_heap() {
-            common::pop::removes_the_first_value_from_min_heap(RankedPairingHeap::single_pass_min2());
+            common::pop::removes_the_first_value_from_min_heap(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
 
         #[test]
         fn returns_the_first_value_from_the_heap() {
-            common::pop::returns_the_first_value_from_min_heap(RankedPairingHeap::single_pass_min2());
+            common::pop::returns_the_first_value_from_min_heap(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
 
         #[test]
@@ -379,7 +442,9 @@ mod single_pass_min2 {
 
         #[test]
         fn returns_all_elements_from_largest_to_smallest() {
-            common::pop::returns_all_elements_from_smallest_to_largest_in_a_min_heap(RankedPairingHeap::single_pass_min2());
+            common::pop::returns_all_elements_from_smallest_to_largest_in_a_min_heap(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
     }
 
@@ -394,12 +459,16 @@ mod single_pass_min2 {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::push::adds_a_higher_item_to_the_heap_behind_a_lower_in_a_min_heap(RankedPairingHeap::single_pass_min2());
+            common::push::adds_a_higher_item_to_the_heap_behind_a_lower_in_a_min_heap(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
 
         #[test]
         fn adds_a_lower_item_to_the_heap_before_a_higher() {
-            common::push::adds_a_lower_item_to_the_heap_before_a_higher_in_a_min_heap(RankedPairingHeap::single_pass_min2());
+            common::push::adds_a_lower_item_to_the_heap_before_a_higher_in_a_min_heap(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
     }
 
@@ -414,7 +483,9 @@ mod single_pass_min2 {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::top::returns_the_first_value_in_min_a_heap(RankedPairingHeap::single_pass_min2());
+            common::top::returns_the_first_value_in_min_a_heap(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
     }
 
@@ -424,45 +495,56 @@ mod single_pass_min2 {
 
         #[test]
         fn returns_the_correct_size_of_a_heap_after_adding_elements() {
-            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(RankedPairingHeap::single_pass_min2());
+            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
 
         #[test]
         fn returns_the_first_value_in_a_heap() {
-            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(RankedPairingHeap::single_pass_min2());
+            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(
+                RankedPairingHeap::single_pass_min2(),
+            );
         }
     }
 }
 
-
 mod multi_pass_max {
     mod delete {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn delete_an_element_by_key() {
-            common::delete::will_delete_a_specific_element_by_key_from_max_heap(RankedPairingHeap::multi_pass_max());
+            common::delete::will_delete_a_specific_element_by_key_from_max_heap(
+                RankedPairingHeap::multi_pass_max(),
+            );
         }
 
         #[test]
         fn delete_an_element_by_key_after_pop() {
-            common::delete::will_delete_a_specific_element_by_key_from_max_heap_after_pop(RankedPairingHeap::multi_pass_max());
+            common::delete::will_delete_a_specific_element_by_key_from_max_heap_after_pop(
+                RankedPairingHeap::multi_pass_max(),
+            );
         }
     }
 
     mod update {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn updates_an_element_by_key() {
-            common::update::will_update_a_specific_element_by_key_in_a_max_heap(RankedPairingHeap::multi_pass_max());
+            common::update::will_update_a_specific_element_by_key_in_a_max_heap(
+                RankedPairingHeap::multi_pass_max(),
+            );
         }
 
         #[test]
         fn updates_an_element_by_key_after_pop() {
-            common::update::will_update_a_specific_element_by_key_in_a_max_heap_after_pop(RankedPairingHeap::multi_pass_max());
+            common::update::will_update_a_specific_element_by_key_in_a_max_heap_after_pop(
+                RankedPairingHeap::multi_pass_max(),
+            );
         }
     }
 
@@ -487,7 +569,9 @@ mod multi_pass_max {
 
         #[test]
         fn returns_all_elements_from_largest_to_smallest() {
-            common::pop::returns_all_elements_from_largest_to_smallest_in_a_max_heap(RankedPairingHeap::multi_pass_max());
+            common::pop::returns_all_elements_from_largest_to_smallest_in_a_max_heap(
+                RankedPairingHeap::multi_pass_max(),
+            );
         }
     }
 
@@ -502,12 +586,16 @@ mod multi_pass_max {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::push::adds_a_higher_item_to_the_heap_before_a_lower_in_a_max_heap(RankedPairingHeap::multi_pass_max());
+            common::push::adds_a_higher_item_to_the_heap_before_a_lower_in_a_max_heap(
+                RankedPairingHeap::multi_pass_max(),
+            );
         }
 
         #[test]
         fn adds_a_lower_item_to_the_heap_before_a_higher() {
-            common::push::adds_a_lower_item_to_the_heap_behind_a_higher_in_a_max_heap(RankedPairingHeap::multi_pass_max());
+            common::push::adds_a_lower_item_to_the_heap_behind_a_higher_in_a_max_heap(
+                RankedPairingHeap::multi_pass_max(),
+            );
         }
     }
 
@@ -532,45 +620,56 @@ mod multi_pass_max {
 
         #[test]
         fn returns_the_correct_size_of_a_heap_after_adding_elements() {
-            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(RankedPairingHeap::multi_pass_max());
+            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(
+                RankedPairingHeap::multi_pass_max(),
+            );
         }
 
         #[test]
         fn returns_the_first_value_in_a_heap() {
-            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(RankedPairingHeap::multi_pass_max());
+            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(
+                RankedPairingHeap::multi_pass_max(),
+            );
         }
     }
 }
 
-
 mod multi_pass_max2 {
     mod delete {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn delete_an_element_by_key() {
-            common::delete::will_delete_a_specific_element_by_key_from_max_heap(RankedPairingHeap::multi_pass_max2());
+            common::delete::will_delete_a_specific_element_by_key_from_max_heap(
+                RankedPairingHeap::multi_pass_max2(),
+            );
         }
 
         #[test]
         fn delete_an_element_by_key_after_pop() {
-            common::delete::will_delete_a_specific_element_by_key_from_max_heap_after_pop(RankedPairingHeap::multi_pass_max2());
+            common::delete::will_delete_a_specific_element_by_key_from_max_heap_after_pop(
+                RankedPairingHeap::multi_pass_max2(),
+            );
         }
     }
 
     mod update {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn updates_an_element_by_key() {
-            common::update::will_update_a_specific_element_by_key_in_a_max_heap(RankedPairingHeap::multi_pass_max2());
+            common::update::will_update_a_specific_element_by_key_in_a_max_heap(
+                RankedPairingHeap::multi_pass_max2(),
+            );
         }
 
         #[test]
         fn updates_an_element_by_key_after_pop() {
-            common::update::will_update_a_specific_element_by_key_in_a_max_heap_after_pop(RankedPairingHeap::multi_pass_max2());
+            common::update::will_update_a_specific_element_by_key_in_a_max_heap_after_pop(
+                RankedPairingHeap::multi_pass_max2(),
+            );
         }
     }
 
@@ -595,7 +694,9 @@ mod multi_pass_max2 {
 
         #[test]
         fn returns_all_elements_from_largest_to_smallest() {
-            common::pop::returns_all_elements_from_largest_to_smallest_in_a_max_heap(RankedPairingHeap::multi_pass_max2());
+            common::pop::returns_all_elements_from_largest_to_smallest_in_a_max_heap(
+                RankedPairingHeap::multi_pass_max2(),
+            );
         }
     }
 
@@ -610,12 +711,16 @@ mod multi_pass_max2 {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::push::adds_a_higher_item_to_the_heap_before_a_lower_in_a_max_heap(RankedPairingHeap::multi_pass_max2());
+            common::push::adds_a_higher_item_to_the_heap_before_a_lower_in_a_max_heap(
+                RankedPairingHeap::multi_pass_max2(),
+            );
         }
 
         #[test]
         fn adds_a_lower_item_to_the_heap_before_a_higher() {
-            common::push::adds_a_lower_item_to_the_heap_behind_a_higher_in_a_max_heap(RankedPairingHeap::multi_pass_max2());
+            common::push::adds_a_lower_item_to_the_heap_behind_a_higher_in_a_max_heap(
+                RankedPairingHeap::multi_pass_max2(),
+            );
         }
     }
 
@@ -640,45 +745,56 @@ mod multi_pass_max2 {
 
         #[test]
         fn returns_the_correct_size_of_a_heap_after_adding_elements() {
-            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(RankedPairingHeap::multi_pass_max2());
+            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(
+                RankedPairingHeap::multi_pass_max2(),
+            );
         }
 
         #[test]
         fn returns_the_first_value_in_a_heap() {
-            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(RankedPairingHeap::multi_pass_max2());
+            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(
+                RankedPairingHeap::multi_pass_max2(),
+            );
         }
     }
 }
 
-
 mod single_pass_max {
     mod delete {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn delete_an_element_by_key() {
-            common::delete::will_delete_a_specific_element_by_key_from_max_heap(RankedPairingHeap::single_pass_max());
+            common::delete::will_delete_a_specific_element_by_key_from_max_heap(
+                RankedPairingHeap::single_pass_max(),
+            );
         }
 
         #[test]
         fn delete_an_element_by_key_after_pop() {
-            common::delete::will_delete_a_specific_element_by_key_from_max_heap_after_pop(RankedPairingHeap::single_pass_max());
+            common::delete::will_delete_a_specific_element_by_key_from_max_heap_after_pop(
+                RankedPairingHeap::single_pass_max(),
+            );
         }
     }
 
     mod update {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn updates_an_element_by_key() {
-            common::update::will_update_a_specific_element_by_key_in_a_max_heap(RankedPairingHeap::single_pass_max());
+            common::update::will_update_a_specific_element_by_key_in_a_max_heap(
+                RankedPairingHeap::single_pass_max(),
+            );
         }
 
         #[test]
         fn updates_an_element_by_key_after_pop() {
-            common::update::will_update_a_specific_element_by_key_in_a_max_heap_after_pop(RankedPairingHeap::single_pass_max());
+            common::update::will_update_a_specific_element_by_key_in_a_max_heap_after_pop(
+                RankedPairingHeap::single_pass_max(),
+            );
         }
     }
 
@@ -703,7 +819,9 @@ mod single_pass_max {
 
         #[test]
         fn returns_all_elements_from_largest_to_smallest() {
-            common::pop::returns_all_elements_from_largest_to_smallest_in_a_max_heap(RankedPairingHeap::single_pass_max());
+            common::pop::returns_all_elements_from_largest_to_smallest_in_a_max_heap(
+                RankedPairingHeap::single_pass_max(),
+            );
         }
     }
 
@@ -718,12 +836,16 @@ mod single_pass_max {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::push::adds_a_higher_item_to_the_heap_before_a_lower_in_a_max_heap(RankedPairingHeap::single_pass_max());
+            common::push::adds_a_higher_item_to_the_heap_before_a_lower_in_a_max_heap(
+                RankedPairingHeap::single_pass_max(),
+            );
         }
 
         #[test]
         fn adds_a_lower_item_to_the_heap_before_a_higher() {
-            common::push::adds_a_lower_item_to_the_heap_behind_a_higher_in_a_max_heap(RankedPairingHeap::single_pass_max());
+            common::push::adds_a_lower_item_to_the_heap_behind_a_higher_in_a_max_heap(
+                RankedPairingHeap::single_pass_max(),
+            );
         }
     }
 
@@ -748,44 +870,56 @@ mod single_pass_max {
 
         #[test]
         fn returns_the_correct_size_of_a_heap_after_adding_elements() {
-            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(RankedPairingHeap::single_pass_max());
+            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(
+                RankedPairingHeap::single_pass_max(),
+            );
         }
 
         #[test]
         fn returns_the_first_value_in_a_heap() {
-            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(RankedPairingHeap::single_pass_max());
+            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(
+                RankedPairingHeap::single_pass_max(),
+            );
         }
     }
 }
 
 mod single_pass_max2 {
     mod delete {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn delete_an_element_by_key() {
-            common::delete::will_delete_a_specific_element_by_key_from_max_heap(RankedPairingHeap::single_pass_max2());
+            common::delete::will_delete_a_specific_element_by_key_from_max_heap(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
 
         #[test]
         fn delete_an_element_by_key_after_pop() {
-            common::delete::will_delete_a_specific_element_by_key_from_max_heap_after_pop(RankedPairingHeap::single_pass_max2());
+            common::delete::will_delete_a_specific_element_by_key_from_max_heap_after_pop(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
     }
 
     mod update {
-        use heapz::RankedPairingHeap;
         use super::super::common;
+        use heapz::RankedPairingHeap;
 
         #[test]
         fn updates_an_element_by_key() {
-            common::update::will_update_a_specific_element_by_key_in_a_max_heap(RankedPairingHeap::single_pass_max2());
+            common::update::will_update_a_specific_element_by_key_in_a_max_heap(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
 
         #[test]
         fn updates_an_element_by_key_after_pop() {
-            common::update::will_update_a_specific_element_by_key_in_a_max_heap_after_pop(RankedPairingHeap::single_pass_max2());
+            common::update::will_update_a_specific_element_by_key_in_a_max_heap_after_pop(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
     }
 
@@ -795,12 +929,16 @@ mod single_pass_max2 {
 
         #[test]
         fn removes_the_first_value_from_heap() {
-            common::pop::removes_the_first_value_from_max_heap(RankedPairingHeap::single_pass_max2());
+            common::pop::removes_the_first_value_from_max_heap(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
 
         #[test]
         fn returns_the_first_value_from_the_heap() {
-            common::pop::returns_the_first_value_from_max_heap(RankedPairingHeap::single_pass_max2());
+            common::pop::returns_the_first_value_from_max_heap(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
 
         #[test]
@@ -810,7 +948,9 @@ mod single_pass_max2 {
 
         #[test]
         fn returns_all_elements_from_largest_to_smallest() {
-            common::pop::returns_all_elements_from_largest_to_smallest_in_a_max_heap(RankedPairingHeap::single_pass_max2());
+            common::pop::returns_all_elements_from_largest_to_smallest_in_a_max_heap(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
     }
 
@@ -825,12 +965,16 @@ mod single_pass_max2 {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::push::adds_a_higher_item_to_the_heap_before_a_lower_in_a_max_heap(RankedPairingHeap::single_pass_max2());
+            common::push::adds_a_higher_item_to_the_heap_before_a_lower_in_a_max_heap(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
 
         #[test]
         fn adds_a_lower_item_to_the_heap_before_a_higher() {
-            common::push::adds_a_lower_item_to_the_heap_behind_a_higher_in_a_max_heap(RankedPairingHeap::single_pass_max2());
+            common::push::adds_a_lower_item_to_the_heap_behind_a_higher_in_a_max_heap(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
     }
 
@@ -845,7 +989,9 @@ mod single_pass_max2 {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::top::returns_the_first_value_in_max_a_heap(RankedPairingHeap::single_pass_max2());
+            common::top::returns_the_first_value_in_max_a_heap(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
     }
 
@@ -855,12 +1001,16 @@ mod single_pass_max2 {
 
         #[test]
         fn returns_the_correct_size_of_a_heap_after_adding_elements() {
-            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(RankedPairingHeap::single_pass_max2());
+            common::size::returns_the_correct_size_of_a_heap_after_adding_elements(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
 
         #[test]
         fn returns_the_first_value_in_a_heap() {
-            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(RankedPairingHeap::single_pass_max2());
+            common::size::returns_the_correct_size_of_a_heap_after_removing_an_element(
+                RankedPairingHeap::single_pass_max2(),
+            );
         }
     }
 }

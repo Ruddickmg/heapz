@@ -1,5 +1,5 @@
-use std::hash::Hash;
 use crate::Heap;
+use std::hash::Hash;
 
 type BoxedNode<K, V> = Box<Node<K, V>>;
 
@@ -16,7 +16,7 @@ impl<K, V: PartialOrd> Node<K, V> {
             key,
             value,
             left: None,
-            next: None
+            next: None,
         }
     }
     pub fn value(self) -> V {
@@ -45,7 +45,7 @@ pub struct PairingHeap<K, V: PartialOrd> {
 #[derive(PartialEq)]
 enum HeapType {
     Max,
-    Min
+    Min,
 }
 
 impl<K, V: PartialOrd> PairingHeap<K, V> {
@@ -79,7 +79,11 @@ impl<K, V: PartialOrd> PairingHeap<K, V> {
         parent
     }
 
-    fn merge(&mut self, node_a: Option<BoxedNode<K, V>>, node_b: Option<BoxedNode<K, V>>) -> Option<BoxedNode<K, V>> {
+    fn merge(
+        &mut self,
+        node_a: Option<BoxedNode<K, V>>,
+        node_b: Option<BoxedNode<K, V>>,
+    ) -> Option<BoxedNode<K, V>> {
         match (node_a, node_b) {
             (Some(a), Some(b)) => Some(if self.compare(&a, &b) {
                 Self::add_child(a, b)
@@ -130,15 +134,15 @@ impl<K: Hash + Eq, V: PartialOrd> Heap<K, V> for PairingHeap<K, V> {
     }
 
     fn top(&self) -> Option<&K> {
-        self.root.as_ref().map(| node | &node.key)
+        self.root.as_ref().map(|node| &node.key)
     }
 
     fn top_mut(&mut self) -> Option<&mut K> {
-        self.root.as_mut().map(| node | &mut node.key)
+        self.root.as_mut().map(|node| &mut node.key)
     }
 
     fn pop(&mut self) -> Option<K> {
-        self.root.take().map(| mut node | {
+        self.root.take().map(|mut node| {
             self.size -= 1;
             self.root = self.two_pass_merge(node.left.take());
             node.key

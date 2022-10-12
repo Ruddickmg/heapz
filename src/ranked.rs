@@ -1,17 +1,14 @@
+use crate::{DecreaseKey, Heap};
 use std::{
+    cmp::{max, Eq},
     collections::HashMap,
-    cmp::{Eq, max},
     hash::Hash,
-};
-use crate::{
-    DecreaseKey,
-    Heap,
 };
 
 #[derive(PartialEq)]
 enum HeapType {
     Max,
-    Min
+    Min,
 }
 
 #[derive(PartialEq)]
@@ -50,9 +47,15 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> Node<K, V> {
             root: true,
         }
     }
-    pub fn rank(&self) -> usize { self.rank.clone() }
-    pub fn set_rank(&mut self, rank: usize) { self.rank = rank; }
-    pub fn set_root(&mut self, root: bool) { self.root = root; }
+    pub fn rank(&self) -> usize {
+        self.rank.clone()
+    }
+    pub fn set_rank(&mut self, rank: usize) {
+        self.rank = rank;
+    }
+    pub fn set_root(&mut self, root: bool) {
+        self.root = root;
+    }
 }
 
 pub struct RankedPairingHeap<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> {
@@ -75,7 +78,7 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
             heap_type,
             passes,
             list: vec![],
-            keys: HashMap::new()
+            keys: HashMap::new(),
         }
     }
     pub fn single_pass_max() -> Self {
@@ -90,14 +93,26 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
     pub fn single_pass_min2() -> Self {
         Self::new(HeapType::Min, HeapRank::Two, HeapPasses::Single)
     }
-    pub fn multi_pass_max() -> Self { Self::new(HeapType::Max, HeapRank::One, HeapPasses::Multi) }
-    pub fn multi_pass_max2() -> Self { Self::new(HeapType::Max, HeapRank::Two, HeapPasses::Multi) }
-    pub fn multi_pass_min() -> Self { Self::new(HeapType::Min, HeapRank::One, HeapPasses::Multi) }
-    pub fn multi_pass_min2() -> Self { Self::new(HeapType::Min, HeapRank::Two, HeapPasses::Multi) }
+    pub fn multi_pass_max() -> Self {
+        Self::new(HeapType::Max, HeapRank::One, HeapPasses::Multi)
+    }
+    pub fn multi_pass_max2() -> Self {
+        Self::new(HeapType::Max, HeapRank::Two, HeapPasses::Multi)
+    }
+    pub fn multi_pass_min() -> Self {
+        Self::new(HeapType::Min, HeapRank::One, HeapPasses::Multi)
+    }
+    pub fn multi_pass_min2() -> Self {
+        Self::new(HeapType::Min, HeapRank::Two, HeapPasses::Multi)
+    }
 }
 
 // Ranking
-impl<K, V> RankedPairingHeap<K, V> where K: Hash + Eq + Copy, V: PartialOrd + PartialEq {
+impl<K, V> RankedPairingHeap<K, V>
+where
+    K: Hash + Eq + Copy,
+    V: PartialOrd + PartialEq,
+{
     fn rank1(left: i32, next: i32) -> i32 {
         if left != next {
             max(left, next)
@@ -107,17 +122,18 @@ impl<K, V> RankedPairingHeap<K, V> where K: Hash + Eq + Copy, V: PartialOrd + Pa
     }
 
     fn rank2(left: i32, next: i32) -> i32 {
-        max(left, next) + (if (&left as &i32 - &next as &i32).abs() > 1 {
-            0
-        } else {
-            1
-        })
+        max(left, next)
+            + (if (&left as &i32 - &next as &i32).abs() > 1 {
+                0
+            } else {
+                1
+            })
     }
 
     fn rank(&self, left: i32, next: i32) -> usize {
         (match self.heap_rank {
             HeapRank::One => Self::rank1(left, next),
-            HeapRank::Two => Self::rank2(left, next)
+            HeapRank::Two => Self::rank2(left, next),
         }) as usize
     }
 
@@ -136,9 +152,9 @@ impl<K, V> RankedPairingHeap<K, V> where K: Hash + Eq + Copy, V: PartialOrd + Pa
     }
 
     fn update_rank(&mut self, position: Position) {
-        self.get_links(position).map(| (_, left, next) | {
+        self.get_links(position).map(|(_, left, next)| {
             let rank = self.rank_nodes(left, next);
-            self.get_node_mut(position).map(| mut node | {
+            self.get_node_mut(position).map(|mut node| {
                 node.rank = rank;
             });
         });
@@ -153,9 +169,13 @@ impl<K, V> RankedPairingHeap<K, V> where K: Hash + Eq + Copy, V: PartialOrd + Pa
 }
 
 // storage interaction
-impl<K, V> RankedPairingHeap<K, V> where K: Hash + Eq + Copy, V: PartialOrd + PartialEq {
+impl<K, V> RankedPairingHeap<K, V>
+where
+    K: Hash + Eq + Copy,
+    V: PartialOrd + PartialEq,
+{
     fn get_node(&self, position: Position) -> Option<&Node<K, V>> {
-        position.map(| index | self.list.get(index)).unwrap_or(None)
+        position.map(|index| self.list.get(index)).unwrap_or(None)
     }
 
     fn get_node_mut(&mut self, position: Position) -> Option<&mut Node<K, V>> {
@@ -168,12 +188,12 @@ impl<K, V> RankedPairingHeap<K, V> where K: Hash + Eq + Copy, V: PartialOrd + Pa
 
     fn remove_array_node(&mut self, position: Position) -> Option<Node<K, V>> {
         self.get_node(self.last_position())
-            .map(| node | node.key)
-            .map(| key | {
+            .map(|node| node.key)
+            .map(|key| {
                 self.keys.remove(&key);
                 self.keys.insert(key, position);
             });
-        position.map(| index | self.list.swap_remove(index))
+        position.map(|index| self.list.swap_remove(index))
     }
 
     fn add_node(&mut self, node: Node<K, V>) -> Position {
@@ -201,51 +221,59 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
 
     fn is_left(&self, position: Position, parent: Position) -> bool {
         self.get_node(parent)
-            .map(| parent | parent.left == position)
+            .map(|parent| parent.left == position)
             .unwrap_or(false)
     }
 
     fn is_root(&self, position: Position) -> bool {
-        self.get_node(position).map(| node | node.root).unwrap_or(false)
+        self.get_node(position)
+            .map(|node| node.root)
+            .unwrap_or(false)
     }
 
     fn get_value(&self, position: Position) -> Option<&V> {
-        self.get_node(position).map(| node | &node.value)
+        self.get_node(position).map(|node| &node.value)
     }
 
     fn get_key(&self, position: Position) -> Option<&K> {
-        self.get_node(position).map(| node | &node.key)
+        self.get_node(position).map(|node| &node.key)
     }
 
-    fn get_index<F: Fn(&Node<K, V>) -> Position>(&self, index: Position, get_adjacent: F) -> Position {
+    fn get_index<F: Fn(&Node<K, V>) -> Position>(
+        &self,
+        index: Position,
+        get_adjacent: F,
+    ) -> Position {
         self.get_node(index).map(get_adjacent).unwrap_or(None)
     }
 
     fn get_left_index(&self, index: Position) -> Position {
-        self.get_index(index, | node | node.left)
+        self.get_index(index, |node| node.left)
     }
 
     fn get_next_index(&self, index: Position) -> Position {
-        self.get_index(index, | node | node.next)
+        self.get_index(index, |node| node.next)
     }
 
     fn get_parent_index(&self, index: Position) -> Position {
-        self.get_index(index, | node | node.parent)
+        self.get_index(index, |node| node.parent)
     }
 
     fn get_links(&self, position: Position) -> Option<(Position, Position, Position)> {
-        self.get_node(position).map(| node | (node.parent, node.left, node.next))
+        self.get_node(position)
+            .map(|node| (node.parent, node.left, node.next))
     }
 
     fn get_siblings(&self, position: Position) -> Option<(Position, Position)> {
-        self.get_links(position).map(| (parent, _, next) | (parent, next))
+        self.get_links(position)
+            .map(|(parent, _, next)| (parent, next))
     }
 
     fn link_next(&mut self, parent: Position, next: Position) {
-        self.get_node_mut(parent).map(| node | {
+        self.get_node_mut(parent).map(|node| {
             node.next = next;
         });
-        self.get_node_mut(next).map(| node | {
+        self.get_node_mut(next).map(|node| {
             node.parent = parent;
         });
     }
@@ -261,7 +289,7 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
 
     fn unlink_parent(&mut self, child: Position) {
         let parent = self.get_parent_index(child);
-        self.get_node_mut(parent).map(| node | {
+        self.get_node_mut(parent).map(|node| {
             if node.next == child {
                 node.next = None;
             }
@@ -269,7 +297,7 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
                 node.left = None;
             }
         });
-        self.get_node_mut(child).map(| node | {
+        self.get_node_mut(child).map(|node| {
             node.parent = None;
         });
     }
@@ -285,7 +313,9 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
     fn compare(&self, a: Position, b: Position) -> bool {
         self.get_value(a)
             .zip(self.get_value(b))
-            .map_or(false, | (value_a, value_b) | self.compare_values(value_a, value_b))
+            .map_or(false, |(value_a, value_b)| {
+                self.compare_values(value_a, value_b)
+            })
     }
 
     fn merge_trees(&mut self, parent: Position, child: Position) -> Position {
@@ -293,19 +323,21 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
         let rank = (self.get_rank(child) + 1) as usize;
         self.link_next(child, left);
         self.link_left(parent, child);
-        self.get_node_mut(parent).map(| node | node.set_rank(rank));
-        self.get_node_mut(child).map(| node | node.set_root(false));
+        self.get_node_mut(parent).map(|node| node.set_rank(rank));
+        self.get_node_mut(child).map(|node| node.set_root(false));
         parent
     }
 
     fn link(&mut self, node_a: Position, node_b: Position) -> Position {
         if node_b != node_a {
             match (node_a, node_b) {
-                (Some(_), Some(_)) => (if self.compare(node_a, node_b) {
-                    self.merge_trees(node_a, node_b)
-                } else {
-                    self.merge_trees(node_b, node_a)
-                }),
+                (Some(_), Some(_)) => {
+                    (if self.compare(node_a, node_b) {
+                        self.merge_trees(node_a, node_b)
+                    } else {
+                        self.merge_trees(node_b, node_a)
+                    })
+                }
                 (Some(_), None) => node_a,
                 (None, Some(_)) => node_b,
                 _ => None,
@@ -316,8 +348,9 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
     }
 
     fn unlink(&mut self, position: Position) -> Position {
-        self.get_siblings(position).map(| (parent, next) | self.link_next(parent, next));
-        self.get_node_mut(position).map(| node | {
+        self.get_siblings(position)
+            .map(|(parent, next)| self.link_next(parent, next));
+        self.get_node_mut(position).map(|node| {
             node.parent = None;
             node.next = None;
         });
@@ -325,50 +358,54 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
     }
 
     fn update_root(&mut self, replacement: Position) {
-        self.root = if self.size() <= 0 {
-            None
-        } else {
-            replacement
-        }
+        self.root = if self.size() <= 0 { None } else { replacement }
     }
 
     fn swap_remove_with_tree(&mut self, position: Position) -> Option<Node<K, V>> {
         let last = self.last_position();
         let is_last_node = self.is_linked_to_self(position);
-        self.get_links(last).map(| (parent_of_last, left_of_last, next_of_last) | {
-            self.remove_array_node(position).map(| removed | {
-                if !is_last_node {
-                    self.link_next(removed.parent, removed.next);
-                    self.link_left(position, left_of_last);
-                    if last != position {
-                        self.link_next(if parent_of_last == position {
-                            if next_of_last == position {
-                                position
-                            } else {
-                                removed.parent
-                            }
-                        } else {
-                            parent_of_last
-                        }, position);
-                        self.link_next(position, if next_of_last == position {
-                            if parent_of_last == position {
-                                position
-                            } else {
-                                removed.next
-                            }
-                        } else {
-                            next_of_last
-                        });
+        self.get_links(last)
+            .map(|(parent_of_last, left_of_last, next_of_last)| {
+                self.remove_array_node(position).map(|removed| {
+                    if !is_last_node {
+                        self.link_next(removed.parent, removed.next);
+                        self.link_left(position, left_of_last);
+                        if last != position {
+                            self.link_next(
+                                if parent_of_last == position {
+                                    if next_of_last == position {
+                                        position
+                                    } else {
+                                        removed.parent
+                                    }
+                                } else {
+                                    parent_of_last
+                                },
+                                position,
+                            );
+                            self.link_next(
+                                position,
+                                if next_of_last == position {
+                                    if parent_of_last == position {
+                                        position
+                                    } else {
+                                        removed.next
+                                    }
+                                } else {
+                                    next_of_last
+                                },
+                            );
+                        }
                     }
-                }
-                removed
+                    removed
+                })
             })
-        }).unwrap_or(None)
+            .unwrap_or(None)
     }
 
     fn is_linked_to_self(&self, position: Position) -> bool {
         self.get_siblings(position)
-            .map(| (parent, next) | next == position && parent == position)
+            .map(|(parent, next)| next == position && parent == position)
             .unwrap_or(false)
     }
 
@@ -386,26 +423,28 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
 
     fn swap_remove_with_branch(&mut self, position: Position) -> Option<Node<K, V>> {
         let last = self.last_position();
-        self.get_links(last).map(| (parent, left, next) | {
-            let is_left = self.is_left(last, parent);
-            self.remove_array_node(position).map(| mut removed | {
-                self.link_next(removed.parent, removed.next);
-                self.link_next(position, next);
-                self.link_left(position, left);
-                let parent_of_last = if removed.left == last {
-                    removed.left = position;
-                    last
-                } else {
-                    parent
-                };
-                if is_left {
-                    self.link_left(parent_of_last, position);
-                } else {
-                    self.link_next(parent_of_last, position);
-                }
-                removed
+        self.get_links(last)
+            .map(|(parent, left, next)| {
+                let is_left = self.is_left(last, parent);
+                self.remove_array_node(position).map(|mut removed| {
+                    self.link_next(removed.parent, removed.next);
+                    self.link_next(position, next);
+                    self.link_left(position, left);
+                    let parent_of_last = if removed.left == last {
+                        removed.left = position;
+                        last
+                    } else {
+                        parent
+                    };
+                    if is_left {
+                        self.link_left(parent_of_last, position);
+                    } else {
+                        self.link_next(parent_of_last, position);
+                    }
+                    removed
+                })
             })
-        }).unwrap_or(None)
+            .unwrap_or(None)
     }
 
     fn remove(&mut self, position: Position) -> Option<Node<K, V>> {
@@ -431,7 +470,9 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
             }
             node = next;
         }
-        bucket.drain().fold(root, | list, (_, node) | self.add_root_to_list(node, list))
+        bucket
+            .drain()
+            .fold(root, |list, (_, node)| self.add_root_to_list(node, list))
     }
 
     fn multi_pass(&mut self, mut node: Position) -> Position {
@@ -452,7 +493,7 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
                 let unlinked = self.unlink(matched);
                 node = self.link(node, unlinked);
             }
-            if bucket.contains_key(&self.get_rank(node)){
+            if bucket.contains_key(&self.get_rank(node)) {
                 self.link_next(node, next);
             } else {
                 bucket.insert(rank, node);
@@ -472,13 +513,17 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
     }
 
     fn add_root_to_list(&mut self, root: Position, list: Position) -> Position {
-        self.get_node_mut(root).map(|node | node.set_root(true));
+        self.get_node_mut(root).map(|node| node.set_root(true));
         if list.is_some() {
             if let Some((parent, next)) = self.get_siblings(list) {
                 let is_new_root = self.compare(root, list);
                 self.link_next(if is_new_root { parent } else { list }, root);
                 self.link_next(root, if is_new_root { list } else { next });
-                if is_new_root { root } else { list }
+                if is_new_root {
+                    root
+                } else {
+                    list
+                }
             } else {
                 list
             }
@@ -512,8 +557,14 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
     }
 }
 
-impl<K, V> Heap<K, V> for RankedPairingHeap<K, V> where K: Hash + Eq + Copy, V: PartialOrd {
-    fn is_empty(&self) -> bool { self.list.is_empty() }
+impl<K, V> Heap<K, V> for RankedPairingHeap<K, V>
+where
+    K: Hash + Eq + Copy,
+    V: PartialOrd,
+{
+    fn is_empty(&self) -> bool {
+        self.list.is_empty()
+    }
 
     fn size(&self) -> usize {
         self.list.len()
@@ -531,14 +582,14 @@ impl<K, V> Heap<K, V> for RankedPairingHeap<K, V> where K: Hash + Eq + Copy, V: 
     }
 
     fn top_mut(&mut self) -> Option<&mut K> {
-        self.get_node_mut(self.root).map(| node | &mut node.key)
+        self.get_node_mut(self.root).map(|node| &mut node.key)
     }
 
     fn pop(&mut self) -> Option<K> {
         let root = self.root;
         if root.is_some() {
             let next_root = self.get_next_root(root);
-            self.remove(root).map(| removed | {
+            self.remove(root).map(|removed| {
                 let head = self.concatenate_lists(next_root, removed.left);
                 let root = self.combine_ranks(head);
                 self.update_root(root);
@@ -550,15 +601,23 @@ impl<K, V> Heap<K, V> for RankedPairingHeap<K, V> where K: Hash + Eq + Copy, V: 
     }
 }
 
-impl<K, V> DecreaseKey<K, V> for RankedPairingHeap<K, V> where K: Hash + Eq + Copy, V: PartialOrd {
+impl<K, V> DecreaseKey<K, V> for RankedPairingHeap<K, V>
+where
+    K: Hash + Eq + Copy,
+    V: PartialOrd,
+{
     fn update(&mut self, key: &K, value: V) {
         let position = self.get_position(key);
         self.get_value(position)
-            .map(| current | self.compare_values(&value, current))
-            .map(| can_update | if can_update {
-                self.unlink_node_from_tree(position, self.root);
-                self.get_node_mut(position).map(| node | { node.value = value; });
-                self.root = self.add_root_to_list(position, self.root);
+            .map(|current| self.compare_values(&value, current))
+            .map(|can_update| {
+                if can_update {
+                    self.unlink_node_from_tree(position, self.root);
+                    self.get_node_mut(position).map(|node| {
+                        node.value = value;
+                    });
+                    self.root = self.add_root_to_list(position, self.root);
+                }
             });
     }
 

@@ -22,8 +22,18 @@ workflows:
   ci-cd:
     jobs:
       - check_formatting
+      - check_wasm_support
       - build
       - test
+      - publish:
+          filters:
+            branches:
+              only: main
+          requires:
+            - check_formatting
+            - check_wasm_support
+            - build
+            - test
       - check_version:
           filters:
             branches:
@@ -31,6 +41,20 @@ workflows:
                 - main
 
 jobs:
+  publish:
+    executor: rust-app
+    steps:
+      - checkout
+      - run:
+          name: Login to crates.io
+          command: cargo login
+      - run:
+          name: Verify publish will work
+          command: cargo publish --dry-run
+      - run:
+          name: Publish
+          command: cargo publish
+
   build:
     executor: rust-app
     steps:
@@ -45,6 +69,17 @@ jobs:
           paths:
             - "~/.cargo"
             - "./target"
+
+  check_wasm_support:
+    executor: rust-app
+    steps:
+      - checkout
+      - run:
+          name: Add wasm target
+          command: rustup target add wasm32-unknown-unknown
+      - run:
+          name: Verify code can be built in wasm
+          command: cargo check --target wasm32-unknown-unknown
 
   check_version:
     executor: ubuntu

@@ -46,6 +46,14 @@ jobs:
             - "~/.cargo"
             - "./target"
 
+  build-wasm:
+    executor: rust-app
+    steps:
+      - checkout
+      - run:
+          name: Wasm Build
+          command: cargo build --target wasm32-unknown-unknown
+
   check_version:
     executor: ubuntu
     environment:

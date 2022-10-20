@@ -3,6 +3,7 @@ use std::hash::Hash;
 
 type BoxedNode<K, V> = Box<Node<K, V>>;
 
+#[derive(Debug)]
 struct Node<K, V: PartialOrd> {
     pub value: V,
     pub key: K,

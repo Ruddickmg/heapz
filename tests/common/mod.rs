@@ -219,26 +219,28 @@ pub mod update {
     use super::{generate_numbers, DecreaseKey, Element};
     use std::cmp::{max, min};
 
-    pub fn will_update_a_specific_element_by_key_in_a_min_heap<T: DecreaseKey<Element, i32>>(
+    pub fn will_update_a_specific_element_by_key_in_a_min_heap<T: DecreaseKey<i32, i32>>(
         mut heap: T,
     ) {
         let mut numbers = generate_numbers();
         let target = numbers.pop().unwrap();
         let mut cloned = numbers.clone();
-        let mut smallest = target;
         numbers.into_iter().for_each(|n| {
-            smallest = min(smallest, n);
-            let _ = &mut heap.push(Element::Node, n);
+            let _ = &mut heap.push(n, n);
         });
-        heap.push(Element::Target, target);
-        let next_smallest = smallest - 1;
+        heap.push(target, target);
         cloned.sort_by(|a, b| b.cmp(a));
-        heap.update(&Element::Target, next_smallest);
-        assert_eq!(heap.pop(), Some(Element::Target));
+        let smallest = cloned[cloned.len() - 1];
+        let next_smallest = smallest - 1;
+        heap.update(&target, next_smallest);
+        assert_eq!(heap.pop(), Some(target));
+        while !cloned.is_empty() {
+            assert_eq!(heap.pop(), cloned.pop());
+        }
     }
 
     pub fn will_update_a_specific_element_by_key_in_a_min_heap_after_pop<
-        T: DecreaseKey<Element, i32>,
+        T: DecreaseKey<i32, i32>,
     >(
         mut heap: T,
     ) {
@@ -251,35 +253,40 @@ pub mod update {
         let mut smallest = target;
         numbers.into_iter().for_each(|n| {
             smallest = min(smallest, n);
-            let _ = &mut heap.push(Element::Node, n);
+            let _ = &mut heap.push(n, n);
         });
-        heap.push(Element::Target, target);
+        heap.push(target, target);
         let prev_smallest = smallest + 1;
-        heap.update(&Element::Target, prev_smallest);
-        assert_eq!(heap.pop(), Some(Element::Node));
-        assert_eq!(heap.pop(), Some(Element::Target));
+        heap.update(&target, prev_smallest);
+        assert_eq!(heap.pop(), cloned.pop());
+        assert_eq!(heap.pop(), Some(target));
+        while !cloned.is_empty() {
+            assert_eq!(heap.pop(), cloned.pop());
+        }
     }
 
-    pub fn will_update_a_specific_element_by_key_in_a_max_heap<T: DecreaseKey<Element, i32>>(
+    pub fn will_update_a_specific_element_by_key_in_a_max_heap<T: DecreaseKey<i32, i32>>(
         mut heap: T,
     ) {
         let mut numbers = generate_numbers();
         let target = numbers.pop().unwrap();
         let mut cloned = numbers.clone();
-        let mut largest = target;
         numbers.into_iter().for_each(|n| {
-            largest = max(largest, n);
-            let _ = &mut heap.push(Element::Node, n);
+            let _ = &mut heap.push(n, n);
         });
-        heap.push(Element::Target, target);
-        let next_largest = largest + 1;
+        heap.push(target, target);
         cloned.sort_by(|a, b| a.cmp(b));
-        heap.update(&Element::Target, next_largest);
-        assert_eq!(heap.pop(), Some(Element::Target));
+        let largest = cloned[cloned.len() - 1];
+        let next_largest = largest + 1;
+        heap.update(&target, next_largest);
+        assert_eq!(heap.pop(), Some(target));
+        while !cloned.is_empty() {
+            assert_eq!(heap.pop(), cloned.pop());
+        }
     }
 
     pub fn will_update_a_specific_element_by_key_in_a_max_heap_after_pop<
-        T: DecreaseKey<Element, i32>,
+        T: DecreaseKey<i32, i32>,
     >(
         mut heap: T,
     ) {
@@ -289,16 +296,18 @@ pub mod update {
         let target = cloned.remove(0);
         let index = numbers.iter().position(|n| n == &target).unwrap();
         numbers.remove(index);
-        let mut largest = target;
         numbers.into_iter().for_each(|n| {
-            largest = max(largest, n);
-            let _ = &mut heap.push(Element::Node, n);
+            let _ = &mut heap.push(n, n);
         });
-        heap.push(Element::Target, target);
+        heap.push(target, target);
+        let largest = cloned[cloned.len() - 1];
         let prev_largest = largest - 1;
-        heap.update(&Element::Target, prev_largest);
-        assert_eq!(heap.pop(), Some(Element::Node));
-        assert_eq!(heap.pop(), Some(Element::Target));
+        heap.update(&target, prev_largest);
+        assert_eq!(heap.pop(), cloned.pop());
+        assert_eq!(heap.pop(), Some(target));
+        while !heap.is_empty() {
+            assert_eq!(heap.pop(), cloned.pop());
+        }
     }
 }
 
@@ -312,17 +321,13 @@ pub mod delete {
         let mut numbers = generate_numbers();
         let mut cloned = numbers.clone();
         cloned.sort_by(|a, b| b.cmp(a));
-        let target = cloned.remove(0);
-        let index = numbers.iter().position(|n| n == &target).unwrap();
-        numbers.remove(index);
-        let mut largest = target;
+        let target = cloned[0] + 100;
         numbers.into_iter().for_each(|n| {
-            largest = max(largest, n);
             let _ = &mut heap.push(n, n);
         });
         heap.push(target, target);
         heap.delete(&target);
-        while !cloned.is_empty() {
+        while !cloned.is_empty() && !heap.is_empty() {
             assert_eq!(heap.pop(), cloned.pop())
         }
     }
@@ -332,22 +337,17 @@ pub mod delete {
     >(
         mut heap: T,
     ) {
-        let mut numbers = generate_numbers();
+        let numbers = generate_numbers();
         let mut cloned = numbers.clone();
         cloned.sort_by(|a, b| b.cmp(a));
-        let target = cloned.remove(0);
-        let index = numbers.iter().position(|n| n == &target).unwrap();
-        numbers.remove(index);
-        let mut largest = target;
+        let target = cloned[0] + 100;
         numbers.into_iter().for_each(|n| {
-            largest = max(largest, n);
             let _ = &mut heap.push(n, n);
         });
-        let target = cloned.remove(0);
         heap.push(target, target);
         assert_eq!(heap.pop(), cloned.pop());
         heap.delete(&target);
-        while !cloned.is_empty() {
+        while !cloned.is_empty() && !heap.is_empty() {
             assert_eq!(heap.pop(), cloned.pop())
         }
     }
@@ -355,20 +355,16 @@ pub mod delete {
     pub fn will_delete_a_specific_element_by_key_from_max_heap<T: DecreaseKey<i32, i32>>(
         mut heap: T,
     ) {
-        let mut numbers = generate_numbers();
+        let numbers = generate_numbers();
         let mut cloned = numbers.clone();
         cloned.sort_by(|a, b| a.cmp(b));
-        let target = cloned.remove(0);
-        let index = numbers.iter().position(|n| n == &target).unwrap();
-        numbers.remove(index);
-        let mut smallest = target;
+        let target = cloned[0] - 100;
         numbers.into_iter().for_each(|n| {
-            smallest = min(smallest, n);
             let _ = &mut heap.push(n, n);
         });
         heap.push(target, target);
         heap.delete(&target);
-        while !cloned.is_empty() {
+        while !cloned.is_empty() && !heap.is_empty() {
             assert_eq!(heap.pop(), cloned.pop())
         }
     }
@@ -378,22 +374,17 @@ pub mod delete {
     >(
         mut heap: T,
     ) {
-        let mut numbers = generate_numbers();
+        let numbers = generate_numbers();
         let mut cloned = numbers.clone();
         cloned.sort_by(|a, b| a.cmp(b));
-        let target = cloned.remove(0);
-        let index = numbers.iter().position(|n| n == &target).unwrap();
-        numbers.remove(index);
-        let mut smallest = target;
+        let target = cloned[0] - 100;
         numbers.into_iter().for_each(|n| {
-            smallest = min(smallest, n);
             let _ = &mut heap.push(n, n);
         });
-        let target = cloned.remove(0);
         heap.push(target, target);
         assert_eq!(heap.pop(), cloned.pop());
         heap.delete(&target);
-        while !cloned.is_empty() {
+        while !cloned.is_empty() && !heap.is_empty() {
             assert_eq!(heap.pop(), cloned.pop())
         }
     }

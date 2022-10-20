@@ -25,7 +25,7 @@ enum HeapPasses {
 
 type Position = Option<usize>;
 
-struct Node<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> {
+struct Node<K: Hash + Eq + Copy, V: PartialOrd> {
     key: K,
     value: V,
     left: Position,
@@ -35,7 +35,7 @@ struct Node<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> {
     root: bool,
 }
 
-impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> Node<K, V> {
+impl<K: Hash + Eq + Copy, V: PartialOrd> Node<K, V> {
     pub fn new(key: K, value: V) -> Self {
         Node {
             key,
@@ -58,7 +58,7 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> Node<K, V> {
     }
 }
 
-pub struct RankedPairingHeap<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> {
+pub struct RankedPairingHeap<K: Hash + Eq + Copy, V: PartialOrd> {
     root: Position,
     root_count: usize,
     heap_rank: HeapRank,
@@ -69,7 +69,7 @@ pub struct RankedPairingHeap<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> {
 }
 
 // struct initialization
-impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
+impl<K: Hash + Eq + Copy, V: PartialOrd> RankedPairingHeap<K, V> {
     fn new(heap_type: HeapType, heap_rank: HeapRank, passes: HeapPasses) -> Self {
         RankedPairingHeap {
             root: None,
@@ -111,7 +111,7 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
 impl<K, V> RankedPairingHeap<K, V>
 where
     K: Hash + Eq + Copy,
-    V: PartialOrd + PartialEq,
+    V: PartialOrd,
 {
     fn rank1(left: i32, next: i32) -> i32 {
         if left != next {
@@ -172,7 +172,7 @@ where
 impl<K, V> RankedPairingHeap<K, V>
 where
     K: Hash + Eq + Copy,
-    V: PartialOrd + PartialEq,
+    V: PartialOrd,
 {
     fn get_node(&self, position: Position) -> Option<&Node<K, V>> {
         position.map(|index| self.list.get(index)).unwrap_or(None)
@@ -209,7 +209,7 @@ where
 }
 
 // utility functions
-impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
+impl<K: Hash + Eq + Copy, V: PartialOrd> RankedPairingHeap<K, V> {
     fn last_position(&self) -> Position {
         let size = self.size();
         if size > 0 {
@@ -541,7 +541,7 @@ impl<K: Hash + Eq + Copy, V: PartialOrd + PartialEq> RankedPairingHeap<K, V> {
         head_list.or(tail_list)
     }
 
-    fn unlink_node_from_tree(&mut self, position: Position, mut root: Position) -> Position {
+    fn unlink_node_from_tree(&mut self, position: Position, root: Position) -> Position {
         if self.is_root(position) {
             if position != root {
                 self.unlink(position);

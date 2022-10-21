@@ -10,9 +10,9 @@ use std::{
 */
 #[derive(PartialEq)]
 enum HeapRank {
-    ///! [`HeapRank::One`] has larger constant factors in the time bounds than [`HeapRank::Two`] but is simpler
+    /// [`HeapRank::One`] has larger constant factors in the time bounds than [`HeapRank::Two`] but is simpler
     One,
-    ///! [`HeapRank::Two`] has smaller constant factors in the time bounds than [`HeapRank::One`]
+    /// [`HeapRank::Two`] has smaller constant factors in the time bounds than [`HeapRank::One`]
     Two,
 }
 
@@ -24,10 +24,10 @@ Combining all trees of identical size (rank) takes multiple passes but is not re
 */
 #[derive(PartialEq)]
 enum HeapPasses {
-    ///! A single pass will cause the heap to restructure the heap lazily, only iterating over each node a single time and combining any nodes with matching size/ranks.
+    /// A single pass will cause the heap to restructure the heap lazily, only iterating over each node a single time and combining any nodes with matching size/ranks.
     Single,
 
-    ///! Multiple passes restructure the heap eagerly, merging trees repeatedly until no two trees have matching size/rank.
+    /// Multiple passes restructure the heap eagerly, merging trees repeatedly until no two trees have matching size/rank.
     Multi,
 }
 

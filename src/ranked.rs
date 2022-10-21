@@ -617,21 +617,13 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
         head_list.or(tail_list)
     }
 
-    fn unlink_node_from_tree(&mut self, position: Position, root: Position) -> Position {
-        if self.is_root(position) {
-            if position != root {
-                self.unlink(position);
-            } else {
-                println!("is root!");
-            }
-        } else if let Some((parent, _, next)) = self.get_links(position) {
-            if self.is_left(position, parent) {
-                self.link_left(parent, next);
-            } else {
-                self.link_next(parent, next);
-            }
+    fn unlink_tree(&mut self, position: Position, parent: Position, next: Position) {
+        if self.is_left(position, parent) {
+            self.link_left(parent, next);
+        } else {
+            self.link_next(parent, next);
         }
-        position
+        self.update_ranks(next);
     }
 }
 
@@ -687,14 +679,28 @@ where
 {
     fn update(&mut self, key: &K, value: V) {
         let position = self.get_position(key);
-        self.get_value(position)
-            .map(|current| self.compare_values(&value, current))
-            .map(|can_update| {
+        let heap_type = self.heap_type;
+        self.get_node_mut(position)
+            .map(| node | {
+                let can_update = if heap_type == HeapType::Max {
+                    value > node.value
+                } else {
+                    value < node.value
+                };
                 if can_update {
-                    self.unlink_node_from_tree(position, self.root);
-                    self.get_node_mut(position).map(|node| {
-                        node.value = value;
-                    });
+                    node.value = value;
+                }
+                (node.root, can_update, node.left, node.parent, node.next)
+            })
+            .map(| (is_root, can_update, left, parent, next) | if can_update {
+                if is_root {
+                    if self.compare(position, self.root) {
+                        self.root = position;
+                    }
+                } else {
+                    let rank = (self.get_rank(left) + 1) as usize;
+                    self.get_node_mut(position).map(| node | { node.rank = rank; });
+                    self.unlink_tree(position, parent, next);
                     self.root = self.add_root_to_list(position, self.root);
                 }
             });
@@ -702,10 +708,13 @@ where
 
     fn delete(&mut self, key: &K) -> Option<K> {
         let position = self.get_position(key);
-        let root = self.root;
-        self.root = self.unlink_node_from_tree(position, self.root);
-        let deleted = self.pop();
-        self.root = root;
-        deleted
+        self.get_node(position)
+            .map(| node | (node.root,  node.left, node.parent, node.next))
+            .map(| (is_root, left, parent, next) | if !is_root {
+                self.unlink_tree(position, parent, next);
+                self.add_root_to_list(position, self.root);
+            });
+        self.root = position;
+        self.pop()
     }
 }

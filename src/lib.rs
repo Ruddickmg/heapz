@@ -18,7 +18,7 @@ pub use linked::*;
 pub use ranked::*;
 
 ///! [`HeapType`] Represents whether a heap/queue is min ([`HeapType::Min`]) or max ([`HeapType::Max`]) priority
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 enum HeapType {
     ///! represents a heap type which prioritizes elements with the maximum value
     Max,

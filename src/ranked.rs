@@ -1,31 +1,40 @@
-use crate::{DecreaseKey, Heap};
+use crate::{DecreaseKey, Heap, HeapType};
 use std::{
     cmp::{max, Eq},
     collections::HashMap,
     hash::Hash,
 };
 
-#[derive(PartialEq)]
-enum HeapType {
-    Max,
-    Min,
-}
 
+/**!
+[`HeapRank`] represents which algorithm will be used to calculate the rank of a node/tree
+*/
 #[derive(PartialEq)]
 enum HeapRank {
+    ///! [`HeapRank::One`] has larger constant factors in the time bounds than [`HeapRank::Two`] but is simpler
     One,
+    ///! [`HeapRank::Two`] has smaller constant factors in the time bounds than [`HeapRank::One`]
     Two,
 }
 
+/**!
+[`HeapPasses`] represent how many passes will be made when restructuring a [`RankPairingHeap`]
+
+[Rank pairing heaps]() use a list of trees that can be combined if they have identical size (rank).
+Combining all trees of identical size (rank) takes multiple passes but is not required for the [`RankPairingHeap`] to work.
+*/
 #[derive(PartialEq)]
 enum HeapPasses {
+    ///! A single pass will cause the heap to restructure the heap lazily, only iterating over each node a single time and combining any nodes with matching size/ranks.
     Single,
+
+    ///! Multiple passes restructure the heap eagerly, merging trees repeatedly until no two trees have matching size/rank.
     Multi,
 }
 
 type Position = Option<usize>;
 
-struct Node<K: Hash + Eq + Copy, V: PartialOrd> {
+struct Node<K: Hash + Eq + Clone, V: PartialOrd> {
     key: K,
     value: V,
     left: Position,
@@ -35,7 +44,7 @@ struct Node<K: Hash + Eq + Copy, V: PartialOrd> {
     root: bool,
 }
 
-impl<K: Hash + Eq + Copy, V: PartialOrd> Node<K, V> {
+impl<K: Hash + Eq + Clone, V: PartialOrd> Node<K, V> {
     pub fn new(key: K, value: V) -> Self {
         Node {
             key,
@@ -47,9 +56,6 @@ impl<K: Hash + Eq + Copy, V: PartialOrd> Node<K, V> {
             root: true,
         }
     }
-    pub fn rank(&self) -> usize {
-        self.rank.clone()
-    }
     pub fn set_rank(&mut self, rank: usize) {
         self.rank = rank;
     }
@@ -58,9 +64,16 @@ impl<K: Hash + Eq + Copy, V: PartialOrd> Node<K, V> {
     }
 }
 
-pub struct RankedPairingHeap<K: Hash + Eq + Copy, V: PartialOrd> {
+/**
+[`RankPairingHeap`] is an implementation of a [rank pairing heap](https://skycocoo.github.io/Rank-Pairing-Heap/)
+
+Due to the [difficulty](https://rcoh.me/posts/rust-linked-list-basically-impossible/) in creating [doubly linked lists](https://en.wikipedia.org/wiki/Doubly_linked_list) using safe rust, this [rank pairing heap](https://skycocoo.github.io/Rank-Pairing-Heap/) implementation uses an array to store nodes and uses their indices as pointers.
+
+[rank pairing heaps](https://skycocoo.github.io/Rank-Pairing-Heap/) have a few variations on how their ranks are calculated, how the heap is restructured and the order in which priority is determined.
+To address these different options there are three properties that can be set in any combination for the [`RankPairingHeap`]: [`HeapType`], [`HeapRank`] and [`HeapPasses`]
+ */
+pub struct RankPairingHeap<K: Hash + Eq + Clone, V: PartialOrd> {
     root: Position,
-    root_count: usize,
     heap_rank: HeapRank,
     heap_type: HeapType,
     passes: HeapPasses,
@@ -69,11 +82,10 @@ pub struct RankedPairingHeap<K: Hash + Eq + Copy, V: PartialOrd> {
 }
 
 // struct initialization
-impl<K: Hash + Eq + Copy, V: PartialOrd> RankedPairingHeap<K, V> {
+impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
     fn new(heap_type: HeapType, heap_rank: HeapRank, passes: HeapPasses) -> Self {
-        RankedPairingHeap {
+        RankPairingHeap {
             root: None,
-            root_count: 0,
             heap_rank,
             heap_type,
             passes,
@@ -81,36 +93,100 @@ impl<K: Hash + Eq + Copy, V: PartialOrd> RankedPairingHeap<K, V> {
             keys: HashMap::new(),
         }
     }
+
+    /// Initializes a max ([`HeapType::Max`]) heap using [`HeapRank::One`] and [`HeapPasses::Single`]
+    ///
+    /// ```rust
+    /// use heapz::RankPairingHeap;
+    ///
+    /// let heap: RankPairingHeap<(usize, usize), i32> = RankPairingHeap::single_pass_max();
+    /// ```
     pub fn single_pass_max() -> Self {
         Self::new(HeapType::Max, HeapRank::One, HeapPasses::Single)
     }
+
+    /// Initializes a max ([`HeapType::Max`]) heap using [`HeapRank::Two`] and [`HeapPasses::Single`]
+    ///
+    /// ```rust
+    /// use heapz::RankPairingHeap;
+    ///
+    /// let heap: RankPairingHeap<(usize, usize), i32> = RankPairingHeap::single_pass_max2();
+    /// ```
     pub fn single_pass_max2() -> Self {
         Self::new(HeapType::Max, HeapRank::Two, HeapPasses::Single)
     }
+
+    /// Initializes a min ([`HeapType::Min`]) heap using [`HeapRank::One`] and [`HeapPasses::Single`]
+    ///
+    /// ```rust
+    /// use heapz::RankPairingHeap;
+    ///
+    /// let heap: RankPairingHeap<(usize, usize), i32> = RankPairingHeap::single_pass_min();
+    /// ```
     pub fn single_pass_min() -> Self {
         Self::new(HeapType::Min, HeapRank::One, HeapPasses::Single)
     }
+
+    /// Initializes a min ([`HeapType::Min`]) heap using [`HeapRank::Two`] and [`HeapPasses::Single`]
+    ///
+    /// ```rust
+    /// use heapz::RankPairingHeap;
+    ///
+    /// let heap: RankPairingHeap<(usize, usize), i32> = RankPairingHeap::single_pass_min2();
+    /// ```
     pub fn single_pass_min2() -> Self {
         Self::new(HeapType::Min, HeapRank::Two, HeapPasses::Single)
     }
+
+    /// Initializes a min ([`HeapType::Max`]) heap using [`HeapRank::One`] and [`HeapPasses::Multi`]
+    ///
+    /// ```rust
+    /// use heapz::RankPairingHeap;
+    ///
+    /// let heap: RankPairingHeap<(usize, usize), i32> = RankPairingHeap::multi_pass_max();
+    /// ```
     pub fn multi_pass_max() -> Self {
         Self::new(HeapType::Max, HeapRank::One, HeapPasses::Multi)
     }
+
+    /// Initializes a min ([`HeapType::Max`]) heap using [`HeapRank::Two`] and [`HeapPasses::Multi`]
+    ///
+    /// ```rust
+    /// use heapz::RankPairingHeap;
+    ///
+    /// let heap: RankPairingHeap<(usize, usize), i32> = RankPairingHeap::multi_pass_max2();
+    /// ```
     pub fn multi_pass_max2() -> Self {
         Self::new(HeapType::Max, HeapRank::Two, HeapPasses::Multi)
     }
+
+    /// Initializes a min ([`HeapType::Min`]) heap using [`HeapRank::One`] and [`HeapPasses::Multi`]
+    ///
+    /// ```rust
+    /// use heapz::RankPairingHeap;
+    ///
+    /// let heap: RankPairingHeap<(usize, usize), i32> = RankPairingHeap::multi_pass_min();
+    /// ```
     pub fn multi_pass_min() -> Self {
         Self::new(HeapType::Min, HeapRank::One, HeapPasses::Multi)
     }
+
+    /// Initializes a min ([`HeapType::Min`]) heap using [`HeapRank::Two`] and [`HeapPasses::Multi`]
+    ///
+    /// ```rust
+    /// use heapz::RankPairingHeap;
+    ///
+    /// let heap: RankPairingHeap<(usize, usize), i32> = RankPairingHeap::multi_pass_max2();
+    /// ```
     pub fn multi_pass_min2() -> Self {
         Self::new(HeapType::Min, HeapRank::Two, HeapPasses::Multi)
     }
 }
 
 // Ranking
-impl<K, V> RankedPairingHeap<K, V>
+impl<K, V> RankPairingHeap<K, V>
 where
-    K: Hash + Eq + Copy,
+    K: Hash + Eq + Clone,
     V: PartialOrd,
 {
     fn rank1(left: i32, next: i32) -> i32 {
@@ -169,9 +245,9 @@ where
 }
 
 // storage interaction
-impl<K, V> RankedPairingHeap<K, V>
+impl<K, V> RankPairingHeap<K, V>
 where
-    K: Hash + Eq + Copy,
+    K: Hash + Eq + Clone,
     V: PartialOrd,
 {
     fn get_node(&self, position: Position) -> Option<&Node<K, V>> {
@@ -188,7 +264,7 @@ where
 
     fn remove_array_node(&mut self, position: Position) -> Option<Node<K, V>> {
         self.get_node(self.last_position())
-            .map(|node| node.key)
+            .map(|node| node.key.clone())
             .map(|key| {
                 self.keys.remove(&key);
                 self.keys.insert(key, position);
@@ -198,7 +274,7 @@ where
 
     fn add_node(&mut self, node: Node<K, V>) -> Position {
         let position = Some(self.list.len());
-        self.keys.insert(node.key, position);
+        self.keys.insert(node.key.clone(), position);
         self.list.push(node);
         position
     }
@@ -209,7 +285,7 @@ where
 }
 
 // utility functions
-impl<K: Hash + Eq + Copy, V: PartialOrd> RankedPairingHeap<K, V> {
+impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
     fn last_position(&self) -> Position {
         let size = self.size();
         if size > 0 {
@@ -545,6 +621,8 @@ impl<K: Hash + Eq + Copy, V: PartialOrd> RankedPairingHeap<K, V> {
         if self.is_root(position) {
             if position != root {
                 self.unlink(position);
+            } else {
+                println!("is root!");
             }
         } else if let Some((parent, _, next)) = self.get_links(position) {
             if self.is_left(position, parent) {
@@ -557,9 +635,9 @@ impl<K: Hash + Eq + Copy, V: PartialOrd> RankedPairingHeap<K, V> {
     }
 }
 
-impl<K, V> Heap<K, V> for RankedPairingHeap<K, V>
+impl<K, V> Heap<K, V> for RankPairingHeap<K, V>
 where
-    K: Hash + Eq + Copy,
+    K: Hash + Eq + Clone,
     V: PartialOrd,
 {
     fn is_empty(&self) -> bool {
@@ -588,6 +666,7 @@ where
     fn pop(&mut self) -> Option<K> {
         let root = self.root;
         if root.is_some() {
+            println!("root: {:?}, len: {}", root, self.list.len());
             let next_root = self.get_next_root(root);
             self.remove(root).map(|removed| {
                 let head = self.concatenate_lists(next_root, removed.left);
@@ -601,9 +680,9 @@ where
     }
 }
 
-impl<K, V> DecreaseKey<K, V> for RankedPairingHeap<K, V>
+impl<K, V> DecreaseKey<K, V> for RankPairingHeap<K, V>
 where
-    K: Hash + Eq + Copy,
+    K: Hash + Eq + Clone,
     V: PartialOrd,
 {
     fn update(&mut self, key: &K, value: V) {

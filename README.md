@@ -1,6 +1,6 @@
 # Heapz
 
-This repo is a collection of heap/priority queue implementations
+A collection of heap/priority queue implementations
 
 ### Heap types
 

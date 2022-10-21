@@ -631,14 +631,52 @@ where
     K: Hash + Eq + Clone,
     V: PartialOrd,
 {
+    /// Indicates whether a [`RankPairingHeap`] is empty or not
+    ///
+    /// ```rust
+    /// use heapz::{RankPairingHeap, Heap};
+    ///
+    /// let mut heap = RankPairingHeap::multi_pass_min();
+    ///
+    /// assert_eq!(heap.is_empty(), true);
+    ///
+    /// heap.push("Hello".to_string(), 5);
+    ///
+    /// assert_eq!(heap.is_empty(), false);
+    /// ```
     fn is_empty(&self) -> bool {
         self.list.is_empty()
     }
 
+    /// Returns the amount of elements in the [`RankPairingHeap`]
+    ///
+    /// ```rust
+    /// use heapz::{RankPairingHeap, Heap};
+    ///
+    /// let mut heap = RankPairingHeap::multi_pass_max2();
+    ///
+    /// assert_eq!(heap.size(), 0);
+    ///
+    /// heap.push("Hello".to_string(), 5);
+    ///
+    /// assert_eq!(heap.size(), 1);
+    /// ```
     fn size(&self) -> usize {
         self.list.len()
     }
 
+    /// Adds an element to the [`RankPairingHeap`]
+    ///
+    /// ```rust
+    /// use heapz::{RankPairingHeap, Heap};
+    ///
+    /// let mut heap = RankPairingHeap::multi_pass_min();
+    /// let value = "Hello".to_string();
+    ///
+    /// heap.push(value.clone(), 5);
+    ///
+    /// assert_eq!(heap.top(), Some(&value));
+    /// ```
     fn push(&mut self, key: K, value: V) {
         let node = Node::new(key, value);
         let position = self.add_node(node);
@@ -646,14 +684,58 @@ where
         self.update_root(root);
     }
 
+    /// Returns the highest priority element of a [`RankPairingHeap`] (or None)
+    ///
+    /// ```
+    /// use heapz::{RankPairingHeap, Heap};
+    ///
+    /// let value = "Hello".to_string();
+    /// let mut heap = RankPairingHeap::multi_pass_min2();
+    ///
+    /// assert!(heap.top().is_none());
+    ///
+    /// heap.push(value.clone(), 5);
+    ///
+    /// assert_eq!(heap.top(), Some(&value));
+    /// ```
     fn top(&self) -> Option<&K> {
         self.get_key(self.root)
     }
 
+    /// Returns the highest priority element of a [`RankPairingHeap`] (or None) as mutable
+    ///
+    /// ```rust
+    /// use heapz::{RankPairingHeap, Heap};
+    ///
+    /// let value = "Hello".to_string();
+    /// let mut heap = RankPairingHeap::single_pass_min();
+    ///
+    /// assert!(heap.top_mut().is_none());
+    ///
+    /// heap.push(value.clone(), 5);
+    ///
+    /// assert_eq!(heap.top_mut(), Some(&mut value.clone()));
+    /// ```
     fn top_mut(&mut self) -> Option<&mut K> {
         self.get_node_mut(self.root).map(|node| &mut node.key)
     }
 
+    /// Removes and Returns the highest priority element of a [`RankPairingHeap`] (or None)
+    ///
+    /// ```rust
+    /// use heapz::{RankPairingHeap, Heap};
+    ///
+    /// let value1 = "Hello".to_string();
+    /// let value2 = "World".to_string();
+    /// let mut heap = RankPairingHeap::single_pass_min2();
+    ///
+    /// heap.push(value1.clone(), 4);
+    /// heap.push(value2.clone(), 5);
+    ///
+    /// assert_eq!(heap.pop(), Some(value1.clone()));
+    /// assert_eq!(heap.pop(), Some(value2.clone()));
+    /// assert_eq!(heap.pop(), None);
+    /// ```
     fn pop(&mut self) -> Option<K> {
         let root = self.root;
         if root.is_some() {
@@ -675,6 +757,24 @@ where
     K: Hash + Eq + Clone,
     V: PartialOrd,
 {
+    /// Updates the priority of an element in the [`RankPairingHeap`] (or None)
+    ///
+    /// ```rust
+    /// use heapz::{DecreaseKey, Heap, RankPairingHeap};
+    ///
+    /// let mut heap = RankPairingHeap::single_pass_max();
+    /// let hello = "Hello".to_string();
+    /// let world = "World".to_string();
+    ///
+    /// heap.push(hello.clone(), 2);
+    /// heap.push(world.clone(), 5);
+    ///
+    /// assert_eq!(heap.top(), Some(&world));
+    ///
+    /// heap.update(&hello, 6);
+    ///
+    /// assert_eq!(heap.top(), Some(&hello));
+    /// ```
     fn update(&mut self, key: &K, value: V) {
         let position = self.get_position(key);
         let heap_type = self.heap_type;
@@ -708,6 +808,26 @@ where
             });
     }
 
+    ///  Deletes an element from the [`RankPairingHeap`] and returns it (or None)
+    ///
+    /// ```rust
+    /// use heapz::{DecreaseKey, Heap, RankPairingHeap};
+    ///
+    /// let mut heap = RankPairingHeap::single_pass_max2();
+    /// let hello = "Hello".to_string();
+    /// let world = "World".to_string();
+    ///
+    /// heap.push(hello.clone(), 2);
+    /// heap.push(world.clone(), 6);
+    ///
+    /// assert_eq!(heap.top(), Some(&world));
+    /// assert_eq!(heap.delete(&hello), Some(hello.clone()));
+    ///
+    /// heap.pop();
+    ///
+    /// assert_eq!(heap.top(), None);
+    /// assert_eq!(heap.delete(&hello), None);
+    /// ```
     fn delete(&mut self, key: &K) -> Option<K> {
         let position = self.get_position(key);
         self.get_node(position)

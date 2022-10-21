@@ -28,7 +28,7 @@ impl<K, V: PartialOrd> Node<K, V> {
     }
 }
 
-/**!
+/**
 [`PairingHeap`] is an implementation of a [pairing heap](https://en.wikipedia.org/wiki/Pairing_heap).
 
 It can have either a min or max [`HeapType`] and is implemented using a pattern similar to [singly linked lists](https://en.wikipedia.org/wiki/Linked_list#Singly_linked_list)
@@ -121,14 +121,52 @@ impl<K, V: PartialOrd> PairingHeap<K, V> {
 }
 
 impl<K: Hash + Eq, V: PartialOrd> Heap<K, V> for PairingHeap<K, V> {
+    /// Indicates whether a [`PairingHeap`] is empty or not
+    ///
+    /// ```rust
+    /// use heapz::{PairingHeap, Heap};
+    ///
+    /// let mut heap = PairingHeap::min();
+    ///
+    /// assert_eq!(heap.is_empty(), true);
+    ///
+    /// heap.push("Hello".to_string(), 5);
+    ///
+    /// assert_eq!(heap.is_empty(), false);
+    /// ```
     fn is_empty(&self) -> bool {
         self.root.is_none()
     }
 
+    /// Returns the amount of elements in the [`PairingHeap`]
+    ///
+    /// ```rust
+    /// use heapz::{PairingHeap, Heap};
+    ///
+    /// let mut heap = PairingHeap::max();
+    ///
+    /// assert_eq!(heap.size(), 0);
+    ///
+    /// heap.push("Hello".to_string(), 5);
+    ///
+    /// assert_eq!(heap.size(), 1);
+    /// ```
     fn size(&self) -> usize {
         self.size.clone()
     }
 
+    /// Adds an element to the [`PairingHeap`]
+    ///
+    /// ```rust
+    /// use heapz::{PairingHeap, Heap};
+    ///
+    /// let mut heap = PairingHeap::min();
+    /// let value = "Hello".to_string();
+    ///
+    /// heap.push(value.clone(), 5);
+    ///
+    /// assert_eq!(heap.top(), Some(&value));
+    /// ```
     fn push(&mut self, key: K, value: V) {
         self.root = if self.root.is_some() {
             let root = self.root.take();
@@ -139,14 +177,58 @@ impl<K: Hash + Eq, V: PartialOrd> Heap<K, V> for PairingHeap<K, V> {
         self.size += 1;
     }
 
+    /// Returns the highest priority element of a [`PairingHeap`] (or None)
+    ///
+    /// ```
+    /// use heapz::{PairingHeap, Heap};
+    ///
+    /// let value = "Hello".to_string();
+    /// let mut heap = PairingHeap::max();
+    ///
+    /// assert!(heap.top().is_none());
+    ///
+    /// heap.push(value.clone(), 5);
+    ///
+    /// assert_eq!(heap.top(), Some(&value));
+    /// ```
     fn top(&self) -> Option<&K> {
         self.root.as_ref().map(|node| &node.key)
     }
 
+    /// Returns the highest priority element of a [`PairingHeap`] (or None) as mutable
+    ///
+    /// ```rust
+    /// use heapz::{PairingHeap, Heap};
+    ///
+    /// let value = "Hello".to_string();
+    /// let mut heap = PairingHeap::min();
+    ///
+    /// assert!(heap.top_mut().is_none());
+    ///
+    /// heap.push(value.clone(), 5);
+    ///
+    /// assert_eq!(heap.top_mut(), Some(&mut value.clone()));
+    /// ```
     fn top_mut(&mut self) -> Option<&mut K> {
         self.root.as_mut().map(|node| &mut node.key)
     }
 
+    /// Removes and Returns the highest priority element of a [`PairingHeap`] (or None)
+    ///
+    /// ```rust
+    /// use heapz::{PairingHeap, Heap};
+    ///
+    /// let value1 = "Hello".to_string();
+    /// let value2 = "World".to_string();
+    /// let mut heap = PairingHeap::max();
+    ///
+    /// heap.push(value1.clone(), 5);
+    /// heap.push(value2.clone(), 4);
+    ///
+    /// assert_eq!(heap.pop(), Some(value1.clone()));
+    /// assert_eq!(heap.pop(), Some(value2.clone()));
+    /// assert_eq!(heap.pop(), None);
+    /// ```
     fn pop(&mut self) -> Option<K> {
         self.root.take().map(|mut node| {
             self.size -= 1;

@@ -2,8 +2,6 @@ extern crate heapz;
 
 mod common;
 
-use heapz::RankPairingHeap;
-
 mod multi_pass_min {
     mod delete {
         use super::super::common;

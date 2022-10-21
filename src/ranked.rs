@@ -711,8 +711,8 @@ where
     fn delete(&mut self, key: &K) -> Option<K> {
         let position = self.get_position(key);
         self.get_node(position)
-            .map(|node| (node.root, node.left, node.parent, node.next))
-            .map(|(is_root, left, parent, next)| {
+            .map(|node| (node.root, node.parent, node.next))
+            .map(|(is_root, parent, next)| {
                 if !is_root {
                     self.unlink_tree(position, parent, next);
                     self.add_root_to_list(position, self.root);

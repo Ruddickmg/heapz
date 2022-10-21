@@ -1,5 +1,5 @@
 #![deny(missing_docs)]
-#![deny(missing_doc_code_examples)]
+#![deny(rustdoc::missing_doc_code_examples)]
 
 /*!
 A collection of heap/priority queue implementations.

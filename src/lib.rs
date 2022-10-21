@@ -172,7 +172,6 @@ where
     ///
     /// check_heap(RankPairingHeap::multi_pass_min2());
     /// ```
-
     fn update(&mut self, key: &K, value: V);
 
     ///  Deletes an element from the [`Heap`] and returns it (or None)

@@ -5,7 +5,6 @@ use std::{
     hash::Hash,
 };
 
-
 /**!
 [`HeapRank`] represents which algorithm will be used to calculate the rank of a node/tree
 */
@@ -681,7 +680,7 @@ where
         let position = self.get_position(key);
         let heap_type = self.heap_type;
         self.get_node_mut(position)
-            .map(| node | {
+            .map(|node| {
                 let can_update = if heap_type == HeapType::Max {
                     value > node.value
                 } else {
@@ -692,16 +691,20 @@ where
                 }
                 (node.root, can_update, node.left, node.parent, node.next)
             })
-            .map(| (is_root, can_update, left, parent, next) | if can_update {
-                if is_root {
-                    if self.compare(position, self.root) {
-                        self.root = position;
+            .map(|(is_root, can_update, left, parent, next)| {
+                if can_update {
+                    if is_root {
+                        if self.compare(position, self.root) {
+                            self.root = position;
+                        }
+                    } else {
+                        let rank = (self.get_rank(left) + 1) as usize;
+                        self.get_node_mut(position).map(|node| {
+                            node.rank = rank;
+                        });
+                        self.unlink_tree(position, parent, next);
+                        self.root = self.add_root_to_list(position, self.root);
                     }
-                } else {
-                    let rank = (self.get_rank(left) + 1) as usize;
-                    self.get_node_mut(position).map(| node | { node.rank = rank; });
-                    self.unlink_tree(position, parent, next);
-                    self.root = self.add_root_to_list(position, self.root);
                 }
             });
     }
@@ -709,10 +712,12 @@ where
     fn delete(&mut self, key: &K) -> Option<K> {
         let position = self.get_position(key);
         self.get_node(position)
-            .map(| node | (node.root,  node.left, node.parent, node.next))
-            .map(| (is_root, left, parent, next) | if !is_root {
-                self.unlink_tree(position, parent, next);
-                self.add_root_to_list(position, self.root);
+            .map(|node| (node.root, node.left, node.parent, node.next))
+            .map(|(is_root, left, parent, next)| {
+                if !is_root {
+                    self.unlink_tree(position, parent, next);
+                    self.add_root_to_list(position, self.root);
+                }
             });
         self.root = position;
         self.pop()

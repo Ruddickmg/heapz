@@ -423,16 +423,12 @@ mod single_pass_min2 {
 
         #[test]
         fn removes_the_first_value_from_heap() {
-            common::pop::removes_the_first_value_from_min_heap(
-                RankPairingHeap::single_pass_min2(),
-            );
+            common::pop::removes_the_first_value_from_min_heap(RankPairingHeap::single_pass_min2());
         }
 
         #[test]
         fn returns_the_first_value_from_the_heap() {
-            common::pop::returns_the_first_value_from_min_heap(
-                RankPairingHeap::single_pass_min2(),
-            );
+            common::pop::returns_the_first_value_from_min_heap(RankPairingHeap::single_pass_min2());
         }
 
         #[test]
@@ -483,9 +479,7 @@ mod single_pass_min2 {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::top::returns_the_first_value_in_min_a_heap(
-                RankPairingHeap::single_pass_min2(),
-            );
+            common::top::returns_the_first_value_in_min_a_heap(RankPairingHeap::single_pass_min2());
         }
     }
 
@@ -929,16 +923,12 @@ mod single_pass_max2 {
 
         #[test]
         fn removes_the_first_value_from_heap() {
-            common::pop::removes_the_first_value_from_max_heap(
-                RankPairingHeap::single_pass_max2(),
-            );
+            common::pop::removes_the_first_value_from_max_heap(RankPairingHeap::single_pass_max2());
         }
 
         #[test]
         fn returns_the_first_value_from_the_heap() {
-            common::pop::returns_the_first_value_from_max_heap(
-                RankPairingHeap::single_pass_max2(),
-            );
+            common::pop::returns_the_first_value_from_max_heap(RankPairingHeap::single_pass_max2());
         }
 
         #[test]
@@ -989,9 +979,7 @@ mod single_pass_max2 {
 
         #[test]
         fn adds_a_higher_item_to_the_heap_behind_a_lower() {
-            common::top::returns_the_first_value_in_max_a_heap(
-                RankPairingHeap::single_pass_max2(),
-            );
+            common::top::returns_the_first_value_in_max_a_heap(RankPairingHeap::single_pass_max2());
         }
     }
 

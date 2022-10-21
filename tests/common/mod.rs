@@ -157,13 +157,12 @@ pub mod push {
 #[cfg(test)]
 pub mod top {
     use super::{generate_numbers, Element, Heap};
-    use std::cmp::{max, min};
 
     pub fn returns_the_first_value_in_min_a_heap<T: Heap<Element, i32>>(mut heap: T) {
         let mut numbers = generate_numbers();
         numbers.sort();
         numbers.reverse();
-        let mut smallest = numbers.pop().unwrap();
+        let smallest = numbers.pop().unwrap();
         heap.push(Element::Target, smallest);
         numbers.into_iter().for_each(|n| {
             let _ = &mut heap.push(Element::Node, n);
@@ -188,7 +187,7 @@ pub mod top {
 }
 
 pub mod size {
-    use super::{generate_numbers, Element, Heap};
+    use super::{generate_numbers, Heap};
 
     pub fn returns_the_correct_size_of_a_heap_after_adding_elements<T: Heap<i32, i32>>(
         mut heap: T,
@@ -216,8 +215,8 @@ pub mod size {
 }
 
 pub mod update {
-    use super::{generate_numbers, DecreaseKey, Element};
-    use std::cmp::{max, min};
+    use super::{generate_numbers, DecreaseKey};
+    use std::cmp::min;
 
     pub fn will_update_a_specific_element_by_key_in_a_min_heap<T: DecreaseKey<i32, i32>>(
         mut heap: T,
@@ -313,12 +312,11 @@ pub mod update {
 
 pub mod delete {
     use super::{generate_numbers, DecreaseKey};
-    use std::cmp::{max, min};
 
     pub fn will_delete_a_specific_element_by_key_from_min_heap<T: DecreaseKey<i32, i32>>(
         mut heap: T,
     ) {
-        let mut numbers = generate_numbers();
+        let numbers = generate_numbers();
         let mut cloned = numbers.clone();
         cloned.sort_by(|a, b| b.cmp(a));
         let target = cloned[0] + 100;

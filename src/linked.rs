@@ -1,4 +1,4 @@
-use crate::Heap;
+use crate::{Heap, HeapType};
 use std::hash::Hash;
 
 type BoxedNode<K, V> = Box<Node<K, V>>;
@@ -20,39 +20,44 @@ impl<K, V: PartialOrd> Node<K, V> {
             next: None,
         }
     }
-    pub fn value(self) -> V {
-        self.value
-    }
     pub fn set_left(&mut self, node: Option<BoxedNode<K, V>>) {
         self.left = node;
     }
     pub fn set_next(&mut self, node: Option<BoxedNode<K, V>>) {
         self.next = node;
     }
-    pub fn left(self) -> Option<BoxedNode<K, V>> {
-        self.left
-    }
-    pub fn next(self) -> Option<BoxedNode<K, V>> {
-        self.next
-    }
 }
 
+/**!
+[`PairingHeap`] is an implementation of a [pairing heap](https://en.wikipedia.org/wiki/Pairing_heap).
+
+It can have either a min or max [`HeapType`] and is implemented using a pattern similar to [singly linked lists](https://en.wikipedia.org/wiki/Linked_list#Singly_linked_list)
+ */
 pub struct PairingHeap<K, V: PartialOrd> {
     root: Option<BoxedNode<K, V>>,
     heap_type: HeapType,
     size: usize,
 }
 
-#[derive(PartialEq)]
-enum HeapType {
-    Max,
-    Min,
-}
-
 impl<K, V: PartialOrd> PairingHeap<K, V> {
+    /// Initializes a min priority ([`HeapType::Min`]) [`PairingHeap`]
+    ///
+    /// ```rust
+    /// use heapz::PairingHeap;
+    ///
+    /// let heap: PairingHeap<(usize, usize), i32> = PairingHeap::min();
+    /// ```
     pub fn min() -> Self {
         Self::new(HeapType::Min)
     }
+
+    /// Initializes a max priority ([`HeapType::Max`]) [`PairingHeap`]
+    ///
+    /// ```rust
+    /// use heapz::PairingHeap;
+    ///
+    /// let heap: PairingHeap<(usize, usize), i32> = PairingHeap::max();
+    /// ```
     pub fn max() -> Self {
         Self::new(HeapType::Max)
     }
@@ -117,7 +122,7 @@ impl<K, V: PartialOrd> PairingHeap<K, V> {
 
 impl<K: Hash + Eq, V: PartialOrd> Heap<K, V> for PairingHeap<K, V> {
     fn is_empty(&self) -> bool {
-        self.root.is_some()
+        self.root.is_none()
     }
 
     fn size(&self) -> usize {

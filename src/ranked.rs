@@ -657,7 +657,6 @@ where
     fn pop(&mut self) -> Option<K> {
         let root = self.root;
         if root.is_some() {
-            println!("root: {:?}, len: {}", root, self.list.len());
             let next_root = self.get_next_root(root);
             self.remove(root).map(|removed| {
                 let head = self.concatenate_lists(next_root, removed.left);

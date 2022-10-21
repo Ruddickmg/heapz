@@ -17,16 +17,16 @@ mod ranked;
 pub use linked::*;
 pub use ranked::*;
 
-/// [`HeapType`] Represents whether a heap/queue is min ([`HeapType::Min`]) or max ([`HeapType::Max`]) priority
+///! [`HeapType`] Represents whether a heap/queue is min ([`HeapType::Min`]) or max ([`HeapType::Max`]) priority
 #[derive(PartialEq, Copy, Clone)]
 enum HeapType {
-    /// represents a heap type which prioritizes elements with the maximum value
+    ///! represents a heap type which prioritizes elements with the maximum value
     Max,
-    /// represents a heap type which prioritizes elements with the minimum value
+    ///! represents a heap type which prioritizes elements with the minimum value
     Min,
 }
 
-/// [`Heap`] contains all the methods common to heaps/queues
+///! [`Heap`] contains all the methods common to heaps/queues
 pub trait Heap<K, V>
 where
     K: Hash + Eq,
@@ -68,7 +68,7 @@ where
     /// ```
     fn size(&self) -> usize;
 
-    /// Adds an element to the [`Heap`]
+    ///! Adds an element to the [`Heap`]
     ///
     /// ```rust
     /// use heapz::{PairingHeap, Heap};
@@ -86,7 +86,7 @@ where
     /// ```
     fn push(&mut self, key: K, value: V);
 
-    /// Returns the highest priority element of a [`Heap`] (or None)
+    ///! Returns the highest priority element of a [`Heap`] (or None)
     ///
     /// ```
     /// use heapz::{PairingHeap, Heap};
@@ -105,7 +105,7 @@ where
     /// ```
     fn top(&self) -> Option<&K>;
 
-    /// Returns the highest priority element of a [`Heap`] (or None) as mutable
+    ///! Returns the highest priority element of a [`Heap`] (or None) as mutable
     ///
     /// ```rust
     /// use heapz::{PairingHeap, Heap};
@@ -125,7 +125,7 @@ where
     /// ```
     fn top_mut(&mut self) -> Option<&mut K>;
 
-    /// Removes and Returns the highest priority element of a [`Heap`] (or None)
+    ///! Removes and Returns the highest priority element of a [`Heap`] (or None)
     ///
     /// ```rust
     /// use heapz::{PairingHeap, Heap};
@@ -145,13 +145,13 @@ where
     fn pop(&mut self) -> Option<K>;
 }
 
-/// [`DecreaseKey`] defines extra methods for a [`Heap`] that implement decrease-key and delete operations
+///! [`DecreaseKey`] defines extra methods for a [`Heap`] that implement decrease-key and delete operations
 pub trait DecreaseKey<K, V>: Heap<K, V>
 where
     K: Hash + Eq,
     V: PartialOrd,
 {
-    /// Updates the priority of an element in the [`Heap`] (or None)
+    ///! Updates the priority of an element in the [`Heap`] (or None)
     ///
     /// ```rust
     /// use heapz::{DecreaseKey, RankPairingHeap};
@@ -175,7 +175,7 @@ where
 
     fn update(&mut self, key: &K, value: V);
 
-    ///  Deletes an element from the [`Heap`] and returns it (or None)
+    ///!  Deletes an element from the [`Heap`] and returns it (or None)
     ///
     /// ```rust
     /// use heapz::{DecreaseKey, RankPairingHeap};

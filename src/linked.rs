@@ -28,7 +28,7 @@ impl<K, V: PartialOrd> Node<K, V> {
     }
 }
 
-/**!
+/**
 [`PairingHeap`] is an implementation of a [pairing heap](https://en.wikipedia.org/wiki/Pairing_heap).
 
 It can have either a min or max [`HeapType`] and is implemented using a pattern similar to [singly linked lists](https://en.wikipedia.org/wiki/Linked_list#Singly_linked_list)

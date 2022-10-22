@@ -68,9 +68,9 @@ fn update_benchmark(b: &mut Bencher) {
             arr.iter()
                 .for_each(|num| heap.push(black_box(*num), black_box(*num)));
             i += 1;
-            (heap, arr.len(), (key, value))
+            (heap, (key, value))
         },
-        |(mut heap, len, (key, value))| heap.update(&key, value),
+        |(mut heap, (key, value))| heap.update(&key, value),
         BatchSize::SmallInput
     );
 }
@@ -85,9 +85,9 @@ fn delete_benchmark(b: &mut Bencher) {
             arr.iter()
                 .for_each(|num| heap.push(black_box(*num), black_box(*num)));
             i += 1;
-            (heap, arr.len(), key)
+            (heap, key)
         },
-        |(mut heap, len, key)| {
+        |(mut heap, key)| {
             let _ = heap.delete(&key);
         },
         BatchSize::SmallInput

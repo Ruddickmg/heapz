@@ -50,7 +50,7 @@ jobs:
           name: run benchmarks
           command: cargo bench
       - store_artifacts:
-          path: /target/criterion
+          path: ~/target/criterion
 
   publish:
     executor: rust-app

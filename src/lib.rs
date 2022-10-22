@@ -9,6 +9,7 @@ A collection of heap/priority queue implementations.
  - [Rank Paring Heap](https://skycocoo.github.io/Rank-Pairing-Heap/)
 */
 
+mod utils;
 use std::hash::Hash;
 
 mod pairing_heap;

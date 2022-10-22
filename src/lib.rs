@@ -11,11 +11,11 @@ A collection of heap/priority queue implementations.
 
 use std::hash::Hash;
 
-mod linked;
-mod ranked;
+mod pairing_heap;
+mod rank_pairing_heap;
 
-pub use linked::*;
-pub use ranked::*;
+pub use pairing_heap::*;
+pub use rank_pairing_heap::*;
 
 /// [`HeapType`] Represents whether a heap/queue is min ([`HeapType::Min`]) or max ([`HeapType::Max`]) priority
 #[derive(PartialEq, Copy, Clone)]

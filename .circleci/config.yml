@@ -9,7 +9,7 @@ executors:
       PIPELINE_NUM: << pipeline.number >>
       TZ: "America/Los_Angeles"
     docker:
-      - image: cimg/rust:1.56.0
+      - image: cimg/rust:1.62.1
   ubuntu:
     environment:
       PIPELINE_NUM: << pipeline.number >>
@@ -25,6 +25,7 @@ workflows:
       - check_wasm_support
       - build
       - test
+      - benchmark
       - publish:
           filters:
             branches:
@@ -41,6 +42,16 @@ workflows:
                 - main
 
 jobs:
+  benchmark:
+    executor: rust-app
+    steps:
+      - checkout
+      - run:
+          name: run benchmarks
+          command: cargo bench
+      - store_artifacts:
+          path: ~/target/criterion
+
   publish:
     executor: rust-app
     steps:

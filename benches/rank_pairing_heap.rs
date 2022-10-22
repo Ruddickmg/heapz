@@ -43,7 +43,7 @@ fn pop_benchmark(b: &mut Bencher) {
     b.iter_batched(
         || {
             let arr = vec![1, 3, 5, -2, 6, -7, 9, 10, 13, 4, 12, 115, 500, 132, 67, 334];
-            let mut heap = RankPairingHeap::multi_pass_min2();
+            let mut heap = RankPairingHeap::multi_pass_min();
             arr.iter()
                 .for_each(|num| heap.push(black_box(*num), black_box(*num)));
             (heap, arr.len())
@@ -62,7 +62,7 @@ fn update_benchmark(b: &mut Bencher) {
     b.iter_batched(
         || {
             let arr = vec![1, 3, 5, -2, 6, -7, 9, 10, 13, 4, 12, 115, 500, 132, 67, 334];
-            let mut heap = RankPairingHeap::multi_pass_min2();
+            let mut heap = RankPairingHeap::multi_pass_min();
             let key = arr[(i % arr.len()) as usize];
             let value = if i % 2 == 0 { -1 } else { 2 };
             arr.iter()
@@ -80,7 +80,7 @@ fn delete_benchmark(b: &mut Bencher) {
     b.iter_batched(
         || {
             let arr = vec![1, 3, 5, -2, 6, -7, 9, 10, 13, 4, 12, 115, 500, 132, 67, 334];
-            let mut heap = RankPairingHeap::multi_pass_min2();
+            let mut heap = RankPairingHeap::multi_pass_min();
             let key = arr[(i % arr.len()) as usize];
             arr.iter()
                 .for_each(|num| heap.push(black_box(*num), black_box(*num)));
@@ -95,14 +95,14 @@ fn delete_benchmark(b: &mut Bencher) {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("is_empty", is_empty_benchmark);
-    c.bench_function("size", size_benchmark);
-    c.bench_function("push", push_benchmark);
-    c.bench_function("top", top_benchmark);
-    c.bench_function("top_mut", top_mut_benchmark);
-    c.bench_function("pop", pop_benchmark);
-    c.bench_function("update", update_benchmark);
-    c.bench_function("delete", delete_benchmark);
+    c.bench_function("RankPairingHeap.is_empty", is_empty_benchmark);
+    c.bench_function("RankPairingHeap.size", size_benchmark);
+    c.bench_function("RankPairingHeap.push", push_benchmark);
+    c.bench_function("RankPairingHeap.top", top_benchmark);
+    c.bench_function("RankPairingHeap.top_mut", top_mut_benchmark);
+    c.bench_function("RankPairingHeap.pop", pop_benchmark);
+    c.bench_function("RankPairingHeap.update", update_benchmark);
+    c.bench_function("RankPairingHeap.delete", delete_benchmark);
 }
 
 criterion_group!(rank_pairing_heap, criterion_benchmark);

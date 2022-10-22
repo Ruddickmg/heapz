@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Bencher, Criterion, BatchSize};
+use criterion::{black_box, criterion_group, criterion_main, BatchSize, Bencher, Criterion};
 use heapz::{Heap, PairingHeap};
 
 fn is_empty_benchmark(b: &mut Bencher) {
@@ -17,8 +17,10 @@ fn push_benchmark(b: &mut Bencher) {
     let arr = vec![1, 3, 5, -2, 6, -7, 9, 10, 13, 4, 12, 115, 500, 132, 67, 334];
     b.iter_batched(
         || PairingHeap::<i32, i32>::min(),
-        |mut heap| arr.iter()
-            .for_each(|num| heap.push(black_box(*num), black_box(*num))),
+        |mut heap| {
+            arr.iter()
+                .for_each(|num| heap.push(black_box(*num), black_box(*num)))
+        },
         BatchSize::SmallInput,
     );
 }
@@ -31,7 +33,7 @@ fn top_benchmark(b: &mut Bencher) {
     });
 }
 
-fn top_mut_benchmark(b: &mut Bencher) {
+pub fn top_mut_benchmark(b: &mut Bencher) {
     let mut heap = PairingHeap::min();
     heap.push(1, 1);
     b.iter(|| {
@@ -39,7 +41,7 @@ fn top_mut_benchmark(b: &mut Bencher) {
     });
 }
 
-fn pop_benchmark(b: &mut Bencher) {
+pub fn pop_benchmark(b: &mut Bencher) {
     b.iter_batched(
         || {
             let arr = vec![1, 3, 5, -2, 6, -7, 9, 10, 13, 4, 12, 115, 500, 132, 67, 334];
@@ -53,7 +55,7 @@ fn pop_benchmark(b: &mut Bencher) {
                 let _ = heap.pop();
             }
         },
-        BatchSize::SmallInput
+        BatchSize::SmallInput,
     );
 }
 

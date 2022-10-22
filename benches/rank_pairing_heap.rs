@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Bencher, Criterion, BatchSize};
+use criterion::{black_box, criterion_group, criterion_main, BatchSize, Bencher, Criterion};
 use heapz::{DecreaseKey, Heap, RankPairingHeap};
 
 fn is_empty_benchmark(b: &mut Bencher) {
@@ -17,8 +17,10 @@ fn push_benchmark(b: &mut Bencher) {
     let arr = vec![1, 3, 5, -2, 6, -7, 9, 10, 13, 4, 12, 115, 500, 132, 67, 334];
     b.iter_batched(
         || RankPairingHeap::<i32, i32>::multi_pass_min(),
-        |mut heap| arr.iter()
-            .for_each(|num| heap.push(black_box(*num), black_box(*num))),
+        |mut heap| {
+            arr.iter()
+                .for_each(|num| heap.push(black_box(*num), black_box(*num)))
+        },
         BatchSize::SmallInput,
     );
 }
@@ -53,7 +55,7 @@ fn pop_benchmark(b: &mut Bencher) {
                 let _ = heap.pop();
             }
         },
-        BatchSize::SmallInput
+        BatchSize::SmallInput,
     );
 }
 
@@ -71,7 +73,7 @@ fn update_benchmark(b: &mut Bencher) {
             (heap, (key, value))
         },
         |(mut heap, (key, value))| heap.update(&key, value),
-        BatchSize::SmallInput
+        BatchSize::SmallInput,
     );
 }
 
@@ -90,7 +92,7 @@ fn delete_benchmark(b: &mut Bencher) {
         |(mut heap, key)| {
             let _ = heap.delete(&key);
         },
-        BatchSize::SmallInput
+        BatchSize::SmallInput,
     );
 }
 

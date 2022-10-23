@@ -382,8 +382,6 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
                 parent_node = b;
                 child_node = a;
             }
-            let parent_node = if node_a_is_parent { a } else { b };
-            let child_node = if node_a_is_parent { b } else { a };
             let left_of_parent = (*parent_node).left;
             (*parent_node).left = child;
             (*parent_node).rank = (*child_node).rank + 1;

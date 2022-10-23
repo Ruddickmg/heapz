@@ -220,22 +220,6 @@ where
             0 - 1
         }
     }
-
-    fn update_rank(&mut self, position: Position) {
-        self.get_links(position).map(|(_, left, next)| {
-            let rank = self.rank_nodes(left, next);
-            self.get_node_mut(position).map(|mut node| {
-                node.rank = rank;
-            });
-        });
-    }
-
-    fn update_ranks(&mut self, mut position: Position) {
-        while position.is_some() && !self.is_root(position) {
-            self.update_rank(position);
-            position = self.get_parent_index(position);
-        }
-    }
 }
 
 // storage interaction
@@ -418,40 +402,45 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
         self.root = if self.size() <= 0 { None } else { replacement }
     }
 
+    fn calculate_swapped_positions(position: Position, parent: Position, next: Position, removed: Position) -> Position {
+        if parent == position {
+            if next == position {
+                position
+            } else {
+                removed
+            }
+        } else {
+            parent
+        }
+    }
+
     fn swap_remove_with_tree(&mut self, position: Position) -> Option<Node<K, V>> {
         let last = self.last_position();
-        let is_last_node = self.is_linked_to_self(position);
         self.get_links(last)
             .map(|(parent_of_last, left_of_last, next_of_last)| {
                 self.remove_array_node(position).map(|removed| {
-                    if !is_last_node {
+                    if removed.next != position {
                         self.link_next(removed.parent, removed.next);
-                        self.link_left(position, left_of_last);
                         if last != position {
-                            self.link_next(
-                                if parent_of_last == position {
-                                    if next_of_last == position {
-                                        position
-                                    } else {
-                                        removed.parent
-                                    }
-                                } else {
-                                    parent_of_last
-                                },
-                                position,
-                            );
-                            self.link_next(
-                                position,
-                                if next_of_last == position {
-                                    if parent_of_last == position {
-                                        position
-                                    } else {
-                                        removed.next
-                                    }
-                                } else {
-                                    next_of_last
-                                },
-                            );
+                            let parent = Self::calculate_swapped_positions(position, parent_of_last, next_of_last, removed.parent);
+                            let next = Self::calculate_swapped_positions(position, next_of_last, parent_of_last, removed.next);
+                            self.get_node_mut(position).map(|node| {
+                                node.parent = parent;
+                                node.next = next;
+                                node.left = left_of_last;
+                            });
+                            self.get_node_mut(parent).map(|node| {
+                                node.next = position;
+                            });
+                            vec![next, left_of_last]
+                                .into_iter()
+                                .for_each(| sibling | {
+                                    self.get_node_mut(sibling).map(| node | {
+                                        node.parent = position;
+                                    });
+                                });
+                        } else {
+                            self.link_left(position, left_of_last);
                         }
                     }
                     removed
@@ -468,13 +457,16 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
 
     fn get_next_root(&mut self, position: Position) -> Position {
         let last = self.last_position();
-        let next = self.get_next_index(position);
-        if self.is_linked_to_self(position) {
+        if let Some((linked_to_self, next)) = self.get_node(position).map(|node| (node.next == position, node.next)) {
+            if linked_to_self {
+                None
+            } else if next == last {
+                position
+            } else {
+                next
+            }
+        } else{
             None
-        } else if next == last {
-            position
-        } else {
-            next
         }
     }
 
@@ -485,19 +477,28 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
                 let is_left = self.is_left(last, parent);
                 self.remove_array_node(position).map(|mut removed| {
                     self.link_next(removed.parent, removed.next);
-                    self.link_next(position, next);
-                    self.link_left(position, left);
                     let parent_of_last = if removed.left == last {
                         removed.left = position;
                         last
                     } else {
                         parent
                     };
-                    if is_left {
-                        self.link_left(parent_of_last, position);
+                    self.get_node_mut(position).map(|node| {
+                        node.left = left;
+                        node.next = next;
+                        node.parent = parent_of_last;
+                    });
+                    self.get_node_mut(left).map(|node| {
+                       node.parent = position;
+                    });
+                    self.get_node_mut(next).map(|node| {
+                       node.parent = position;
+                    });
+                    self.get_node_mut(parent_of_last).map(|node| if is_left {
+                        node.left = position;
                     } else {
-                        self.link_next(parent_of_last, position);
-                    }
+                        node.next = position;
+                    });
                     removed
                 })
             })
@@ -638,21 +639,50 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
     }
 
     fn concatenate_lists(&mut self, head_list: Position, tail_list: Position) -> Position {
-        let tail = self.get_parent_index(head_list);
-        self.get_node_mut(head_list).map(|node| {
+        let tail = self.get_node_mut(head_list).map(|node| {
+            let parent = node.parent;
             node.parent = None;
-        });
+            parent
+        }).unwrap_or(None);
         self.link_next(tail, tail_list);
         head_list.or(tail_list)
     }
 
-    fn unlink_tree(&mut self, position: Position, parent: Position, next: Position) {
-        if self.is_left(position, parent) {
-            self.link_left(parent, next);
-        } else {
-            self.link_next(parent, next);
+    fn unlink_tree(&mut self, position: Position, mut parent: Position, next: Position) {
+        let mut rank = self.get_node_mut(next).map(|node| {
+            node.parent = parent;
+            node.rank + 1
+        }).unwrap_or(0);
+
+        parent = self.get_node_mut(parent)
+            .map(| node | {
+                if node.left == position {
+                    node.left = next;
+                } else {
+                    node.next = next;
+                }
+                node.rank = rank;
+                if node.root {
+                    None
+                } else {
+                    node.parent
+                }
+            })
+            .unwrap_or(None);
+
+        while parent.is_some() {
+            rank += 1;
+            parent = self.get_node_mut(parent)
+                .map(|node| {
+                    node.rank = rank;
+                    if node.root {
+                        None
+                    } else {
+                        node.parent
+                    }
+                })
+                .unwrap_or(None);
         }
-        self.update_ranks(next);
     }
 }
 

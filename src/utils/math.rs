@@ -1,4 +1,6 @@
-const fn num_bits<T>() -> usize { std::mem::size_of::<T>() * 8 }
+const fn num_bits<T>() -> usize {
+    std::mem::size_of::<T>() * 8
+}
 
 pub fn log(x: usize) -> u32 {
     num_bits::<i32>() as u32 - (x as i32).leading_zeros() - 1

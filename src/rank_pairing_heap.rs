@@ -1,10 +1,10 @@
+use crate::utils::Bucket;
 use crate::{DecreaseKey, Heap, HeapType};
 use std::{
     cmp::{max, Eq},
     collections::HashMap,
     hash::Hash,
 };
-use crate::utils::Bucket;
 
 /**!
 [`HeapRank`] represents which algorithm will be used to calculate the rank of a node/tree
@@ -381,12 +381,15 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
 
     fn merge_trees(&mut self, parent: Position, child: Position) -> Position {
         let rank = (self.get_rank(child) + 1) as usize;
-        let left = self.get_node_mut(parent).map(| node | {
-            let left = node.left;
-            node.left = child;
-            node.set_rank(rank);
-            left
-        }).unwrap();
+        let left = self
+            .get_node_mut(parent)
+            .map(|node| {
+                let left = node.left;
+                node.left = child;
+                node.set_rank(rank);
+                left
+            })
+            .unwrap();
         self.get_node_mut(left).map(|node| {
             node.parent = child;
         });
@@ -519,7 +522,8 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
         let mut bucket = Bucket::new(self.size());
         let mut root = None;
         while node.is_some() {
-            let (rank, next, parent) = self.get_node_mut(node)
+            let (rank, next, parent) = self
+                .get_node_mut(node)
                 .map(|n| {
                     let parent = n.parent;
                     let next = n.next;
@@ -539,14 +543,15 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
         }
         bucket
             .drain()
-            .fold(root, | list, node| self.add_root_to_list(node, list))
+            .fold(root, |list, node| self.add_root_to_list(node, list))
     }
 
     fn multi_pass(&mut self, mut node: Position) -> Position {
         let mut bucket: Bucket<Position> = Bucket::new(self.size());
         let mut root = None;
         while node.is_some() {
-            let (rank, next, parent) = self.get_node_mut(node)
+            let (rank, next, parent) = self
+                .get_node_mut(node)
                 .map(|n| {
                     let parent = n.parent;
                     let next = n.next;
@@ -557,8 +562,9 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
                 .unwrap();
             self.link_next(parent, next);
             if let Some(matched) = bucket.remove(rank as usize) {
-                let (parent, next) = self.get_node_mut(matched)
-                    .map(| n | {
+                let (parent, next) = self
+                    .get_node_mut(matched)
+                    .map(|n| {
                         let parent = n.parent;
                         let next = n.next;
                         if root == matched {
@@ -571,7 +577,8 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
                         n.next = None;
                         n.parent = None;
                         (parent, next)
-                    }).unwrap();
+                    })
+                    .unwrap();
                 self.link_next(parent, next);
                 node = self.link(node, matched);
             }

@@ -550,7 +550,7 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
         let mut bucket: Bucket<Position> = Bucket::new(self.size());
         let mut root = None;
         while node.is_some() {
-            let (rank, next, parent) = self
+            let (mut rank, next, parent) = self
                 .get_node_mut(node)
                 .map(|n| {
                     let parent = n.parent;
@@ -561,7 +561,7 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
                 })
                 .unwrap();
             self.link_next(parent, next);
-            if let Some(matched) = bucket.remove(rank as usize) {
+            if let Some(matched) = bucket.remove(rank) {
                 let (parent, next) = self
                     .get_node_mut(matched)
                     .map(|n| {
@@ -581,8 +581,9 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
                     .unwrap();
                 self.link_next(parent, next);
                 node = self.link(node, matched);
+                rank += 1;
             }
-            if bucket.contains_key(self.get_rank(node) as usize) {
+            if bucket.contains_key(rank) {
                 self.link_next(node, next);
             } else {
                 bucket.insert(rank, node);

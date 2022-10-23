@@ -398,10 +398,6 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
         }
     }
 
-    fn update_root(&mut self, replacement: Position) {
-        self.root = if self.size() <= 0 { None } else { replacement }
-    }
-
     fn calculate_swapped_positions(
         position: Position,
         parent: Position,
@@ -460,12 +456,6 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
                 })
             })
             .unwrap_or(None)
-    }
-
-    fn is_linked_to_self(&self, position: Position) -> bool {
-        self.get_siblings(position)
-            .map(|(parent, next)| next == position && parent == position)
-            .unwrap_or(false)
     }
 
     fn get_next_root(&mut self, position: Position) -> Position {
@@ -766,8 +756,7 @@ where
     fn push(&mut self, key: K, value: V) {
         let node = Node::new(key, value);
         let position = self.add_node(node);
-        let root = self.add_root_to_list(position, self.root);
-        self.update_root(root);
+        self.root = self.add_root_to_list(position, self.root);
     }
 
     /// Returns the highest priority element of a [`RankPairingHeap`] (or None)
@@ -828,8 +817,7 @@ where
             let next_root = self.get_next_root(root);
             self.remove(root).map(|removed| {
                 let head = self.concatenate_lists(next_root, removed.left);
-                let root = self.combine_ranks(head);
-                self.update_root(root);
+                self.root = self.combine_ranks(head);
                 removed.key
             })
         } else {

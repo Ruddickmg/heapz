@@ -50,8 +50,6 @@ jobs:
       - checkout
       - restore_cache:
           key: project-cache
-      - attach_workspace:
-          at: ./target/criterion
       - run:
           name: run benchmarks
           command: cargo bench
@@ -60,10 +58,6 @@ jobs:
           paths:
             - "~/.cargo"
             - "./target"
-      - persist_to_workspace:
-          root: ./target/criterion
-          paths:
-            - .
 
   publish:
     executor: rust-app

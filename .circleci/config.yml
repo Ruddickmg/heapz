@@ -10,6 +10,7 @@ executors:
       TZ: "America/Los_Angeles"
     docker:
       - image: cimg/rust:1.62.1
+
   ubuntu:
     environment:
       PIPELINE_NUM: << pipeline.number >>
@@ -24,8 +25,12 @@ workflows:
       - check_formatting
       - check_wasm_support
       - build
-      - test
-      - benchmark
+      - test:
+          requires:
+            - build
+      - benchmark:
+          requires:
+            - build
       - publish:
           filters:
             branches:
@@ -44,13 +49,24 @@ workflows:
 jobs:
   benchmark:
     executor: rust-app
+    environment:
+      MASTER_BRANCH_URL: git@github.com:Ruddickmg/heapz.git
     steps:
       - checkout
       - run:
+          name: Checkout Master
+          command: git clone "$MASTER_BRANCH_URL"
+      - restore_cache:
+          key: dependency-cache-{{ checksum "Cargo.lock" }}
+      - restore_cache:
+          key: benchmark-cache-{{ checksum "heapz/Cargo.lock" }}
+      - run:
           name: run benchmarks
           command: cargo bench
-      - store_artifacts:
-          path: ~/target/criterion
+      - save_cache:
+          key: benchmark-cache-{{ checksum "Cargo.lock" }}
+          paths:
+            - "./target/criterion"
 
   publish:
     executor: rust-app
@@ -71,12 +87,12 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: project-cache
+          key: dependency-cache-{{ checksum "Cargo.lock" }}
       - run:
           name: Stable Build
           command: cargo build
       - save_cache:
-          key: project-cache
+          key: dependency-cache-{{ checksum "Cargo.lock" }}
           paths:
             - "~/.cargo"
             - "./target"
@@ -120,5 +136,8 @@ jobs:
     executor: rust-app
     steps:
       - checkout
-      - rust/install
-      - rust/test
+      - restore_cache:
+          key: dependency-cache-{{ checksum "Cargo.lock" }}
+      - run:
+          name: test
+          command: cargo test

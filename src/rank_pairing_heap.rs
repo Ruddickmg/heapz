@@ -1,36 +1,10 @@
 use crate::utils::Bucket;
-use crate::{DecreaseKey, Heap, HeapType};
+use crate::{DecreaseKey, Heap, HeapPasses, HeapRank, HeapType};
 use std::{
     cmp::{max, Eq},
     collections::HashMap,
     hash::Hash,
 };
-
-/**!
-[`HeapRank`] represents which algorithm will be used to calculate the rank of a node/tree
-*/
-#[derive(PartialEq)]
-enum HeapRank {
-    /// [`HeapRank::One`] has larger constant factors in the time bounds than [`HeapRank::Two`] but is simpler
-    One,
-    /// [`HeapRank::Two`] has smaller constant factors in the time bounds than [`HeapRank::One`]
-    Two,
-}
-
-/**!
-[`HeapPasses`] represent how many passes will be made when restructuring a [`RankPairingHeap`]
-
-[Rank pairing heaps]() use a list of trees that can be combined if they have identical size (rank).
-Combining all trees of identical size (rank) takes multiple passes but is not required for the [`RankPairingHeap`] to work.
-*/
-#[derive(PartialEq)]
-enum HeapPasses {
-    /// A single pass will cause the heap to restructure the heap lazily, only iterating over each node a single time and combining any nodes with matching size/ranks.
-    Single,
-
-    /// Multiple passes restructure the heap eagerly, merging trees repeatedly until no two trees have matching size/rank.
-    Multi,
-}
 
 type Position = Option<usize>;
 

@@ -392,9 +392,7 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
             (*child_node).parent = parent;
             (*child_node).next = left_of_parent;
             (*child_node).root = false;
-            self.get_node_mut(left_of_parent).map(|node| {
-                node.parent = child;
-            });
+            self.set_parent(left_of_parent, child);
         }
         parent
     }
@@ -504,12 +502,8 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
                         node.next = next;
                         node.parent = parent_of_last;
                     });
-                    self.get_node_mut(left).map(|node| {
-                        node.parent = position;
-                    });
-                    self.get_node_mut(next).map(|node| {
-                        node.parent = position;
-                    });
+                    self.set_parent(left, position);
+                    self.set_parent(next, position);
                     self.get_node_mut(parent_of_last).map(|node| {
                         if is_left {
                             node.left = position;

@@ -10,7 +10,6 @@ executors:
       TZ: "America/Los_Angeles"
     docker:
       - image: cimg/rust:1.62.1
-    working_directory: .
 
   ubuntu:
     environment:

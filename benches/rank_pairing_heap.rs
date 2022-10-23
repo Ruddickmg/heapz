@@ -97,14 +97,14 @@ fn delete_benchmark(b: &mut Bencher) {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("RankPairingHeap.is_empty", is_empty_benchmark);
-    c.bench_function("RankPairingHeap.size", size_benchmark);
-    c.bench_function("RankPairingHeap.push", push_benchmark);
-    c.bench_function("RankPairingHeap.top", top_benchmark);
-    c.bench_function("RankPairingHeap.top_mut", top_mut_benchmark);
+    // c.bench_function("RankPairingHeap.is_empty", is_empty_benchmark);
+    // c.bench_function("RankPairingHeap.size", size_benchmark);
+    // c.bench_function("RankPairingHeap.push", push_benchmark);
+    // c.bench_function("RankPairingHeap.top", top_benchmark);
+    // c.bench_function("RankPairingHeap.top_mut", top_mut_benchmark);
     c.bench_function("RankPairingHeap.pop", pop_benchmark);
-    c.bench_function("RankPairingHeap.update", update_benchmark);
-    c.bench_function("RankPairingHeap.delete", delete_benchmark);
+    // c.bench_function("RankPairingHeap.update", update_benchmark);
+    // c.bench_function("RankPairingHeap.delete", delete_benchmark);
 }
 
 criterion_group!(rank_pairing_heap, criterion_benchmark);

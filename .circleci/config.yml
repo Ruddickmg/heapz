@@ -25,8 +25,12 @@ workflows:
       - check_formatting
       - check_wasm_support
       - build
-      - test
-      - benchmark
+      - test:
+          requires:
+            - build
+      - benchmark:
+          requires:
+            - build
       - publish:
           filters:
             branches:
@@ -49,14 +53,14 @@ jobs:
       - checkout
       - restore_cache:
           key: benchmark-cache
+      - restore_cache:
+          key: dependency-cache-{{ checksum Cargo.lock }}
       - run:
           name: run benchmarks
           command: cargo bench
       - save_cache:
           key: benchmark-cache
           paths:
-            - "~/.cargo"
-            - "./target"
             - "./target/criterion"
 
   publish:
@@ -78,12 +82,12 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: project-cache
+          key: dependency-cache-{{ checksum Cargo.lock }}
       - run:
           name: Stable Build
           command: cargo build
       - save_cache:
-          key: project-cache
+          key: dependency-cache-{{ checksum Cargo.lock }}
           paths:
             - "~/.cargo"
             - "./target"
@@ -127,4 +131,8 @@ jobs:
     executor: rust-app
     steps:
       - checkout
-      - rust/test
+      - restore_cache:
+          key: dependency-cache-{{ checksum Cargo.lock }}
+      - run:
+          name: test
+          command: cargo test

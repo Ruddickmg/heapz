@@ -25,8 +25,12 @@ workflows:
       - check_formatting
       - check_wasm_support
       - build
-      - test
-      - benchmark
+      - test:
+          requires:
+            - build
+      - benchmark:
+          requires:
+            - build
       - publish:
           filters:
             branches:
@@ -126,5 +130,11 @@ jobs:
     executor: rust-app
     steps:
       - checkout
-      - rust/install
+      - restore_cache:
+          key: project-cache
       - rust/test
+      - save_cache:
+          key: project-cache
+          paths:
+            - "~/.cargo"
+            - "./target"

@@ -357,38 +357,50 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
             })
     }
 
-    fn merge_trees(&mut self, parent: Position, child: Position) -> Position {
-        let rank = (self.get_rank(child) + 1) as usize;
-        let left = self
-            .get_node_mut(parent)
-            .map(|node| {
-                let left = node.left;
-                node.left = child;
-                node.rank = rank;
-                left
-            })
-            .unwrap();
-        self.get_node_mut(left).map(|node| {
-            node.parent = child;
-        });
-        self.get_node_mut(child).map(|node| {
-            node.parent = parent;
-            node.next = left;
-            node.root = false;
-        });
+    fn merge_trees(&mut self, node_a: Position, node_b: Position) -> Position {
+        assert_ne!(node_a, node_b);
+        let a = self.get_node_mut(node_a).unwrap() as *mut Node<K, V>;
+        let b = self.get_node_mut(node_b).unwrap() as *mut Node<K, V>;
+        let mut parent: Position;
+        let mut child: Position;
+        unsafe {
+            let mut parent_node: *mut Node<K, V>;
+            let mut child_node: *mut Node<K, V>;
+            let node_a_is_parent = if self.heap_type == HeapType::Max {
+                (*a).value > (*b).value
+            } else {
+                (*a).value < (*b).value
+            };
+            if node_a_is_parent {
+                parent = node_a;
+                child = node_b;
+                parent_node = a;
+                child_node = b;
+            } else {
+                parent = node_b;
+                child = node_a;
+                parent_node = b;
+                child_node = a;
+            }
+            let parent_node = if node_a_is_parent { a } else { b };
+            let child_node = if node_a_is_parent { b } else { a };
+            let left_of_parent = (*parent_node).left;
+            (*parent_node).left = child;
+            (*parent_node).rank = (*child_node).rank + 1;
+            (*child_node).parent = parent;
+            (*child_node).next = left_of_parent;
+            (*child_node).root = false;
+            self.get_node_mut(left_of_parent).map(|node| {
+                node.parent = child;
+            });
+        }
         parent
     }
 
     fn link(&mut self, node_a: Position, node_b: Position) -> Position {
         if node_b != node_a {
             match (node_a, node_b) {
-                (Some(_), Some(_)) => {
-                    if self.compare(node_a, node_b) {
-                        self.merge_trees(node_a, node_b)
-                    } else {
-                        self.merge_trees(node_b, node_a)
-                    }
-                }
+                (Some(_), Some(_)) => self.merge_trees(node_a, node_b),
                 (Some(_), None) => node_a,
                 (None, Some(_)) => node_b,
                 _ => None,

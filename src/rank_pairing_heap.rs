@@ -598,14 +598,21 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
 
     fn add_root_to_list(&mut self, root: Position, list: Position) -> Position {
         if list.is_some() {
-            let (is_new_root, parent, next) = self.get_node(root)
+            let (is_new_root, parent, next) = self
+                .get_node(root)
                 .zip(self.get_node(list))
-                .map(| (r, l) | (self.compare_values(&r.value, &l.value),l.parent, l.next))
+                .map(|(root_node, list_head)| {
+                    (
+                        self.compare_values(&root_node.value, &list_head.value),
+                        list_head.parent,
+                        list_head.next,
+                    )
+                })
                 .unwrap();
             let parent = if is_new_root { parent } else { list };
             let next = if is_new_root { list } else { next };
             self.get_node_mut(parent).map(|node| {
-               node.next = root;
+                node.next = root;
             });
             self.get_node_mut(root).map(|node| {
                 node.root = true;
@@ -621,12 +628,11 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
                 list
             }
         } else {
-            self.get_node_mut(root)
-                .map(| node | {
-                    node.root = true;
-                    node.next = root;
-                    node.parent = root;
-                });
+            self.get_node_mut(root).map(|node| {
+                node.root = true;
+                node.next = root;
+                node.parent = root;
+            });
             root
         }
     }

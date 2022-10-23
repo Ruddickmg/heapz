@@ -56,12 +56,6 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> Node<K, V> {
             root: true,
         }
     }
-    pub fn set_rank(&mut self, rank: usize) {
-        self.rank = rank;
-    }
-    pub fn set_root(&mut self, root: bool) {
-        self.root = root;
-    }
 }
 
 /**
@@ -386,7 +380,7 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
             .map(|node| {
                 let left = node.left;
                 node.left = child;
-                node.set_rank(rank);
+                node.rank = rank;
                 left
             })
             .unwrap();
@@ -396,7 +390,7 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
         self.get_node_mut(child).map(|node| {
             node.parent = parent;
             node.next = left;
-            node.set_root(false);
+            node.root = false;
         });
         parent
     }
@@ -603,19 +597,36 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
     }
 
     fn add_root_to_list(&mut self, root: Position, list: Position) -> Position {
-        self.get_node_mut(root).map(|node| node.set_root(true));
         if list.is_some() {
-            let (parent, next) = self.get_siblings(list).unwrap();
-            let is_new_root = self.compare(root, list);
-            self.link_next(if is_new_root { parent } else { list }, root);
-            self.link_next(root, if is_new_root { list } else { next });
+            let (is_new_root, parent, next) = self.get_node(root)
+                .zip(self.get_node(list))
+                .map(| (r, l) | (self.compare_values(&r.value, &l.value),l.parent, l.next))
+                .unwrap();
+            let parent = if is_new_root { parent } else { list };
+            let next = if is_new_root { list } else { next };
+            self.get_node_mut(parent).map(|node| {
+               node.next = root;
+            });
+            self.get_node_mut(root).map(|node| {
+                node.root = true;
+                node.next = next;
+                node.parent = parent;
+            });
+            self.get_node_mut(next).map(|node| {
+                node.parent = root;
+            });
             if is_new_root {
                 root
             } else {
                 list
             }
         } else {
-            self.link_next(root, root);
+            self.get_node_mut(root)
+                .map(| node | {
+                    node.root = true;
+                    node.next = root;
+                    node.parent = root;
+                });
             root
         }
     }

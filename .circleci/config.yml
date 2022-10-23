@@ -54,7 +54,7 @@ jobs:
       - restore_cache:
           key: benchmark-cache
       - restore_cache:
-          key: dependency-cache-{{ checksum Cargo.lock }}
+          key: dependency-cache-{{ checksum "Cargo.lock" }}
       - run:
           name: run benchmarks
           command: cargo bench
@@ -82,12 +82,12 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum Cargo.lock }}
+          key: dependency-cache-{{ checksum "Cargo.lock" }}
       - run:
           name: Stable Build
           command: cargo build
       - save_cache:
-          key: dependency-cache-{{ checksum Cargo.lock }}
+          key: dependency-cache-{{ checksum "Cargo.lock" }}
           paths:
             - "~/.cargo"
             - "./target"
@@ -132,7 +132,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum Cargo.lock }}
+          key: dependency-cache-{{ checksum "Cargo.lock" }}
       - run:
           name: test
           command: cargo test

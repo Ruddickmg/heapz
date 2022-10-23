@@ -48,12 +48,12 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: project-cache
+          key: benchmark-cache
       - run:
           name: run benchmarks
           command: cargo bench
       - save_cache:
-          key: project-cache
+          key: benchmark-cache
           paths:
             - "~/.cargo"
             - "./target"

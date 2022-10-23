@@ -25,12 +25,8 @@ workflows:
       - check_formatting
       - check_wasm_support
       - build
-      - test:
-          requires:
-            - build
-      - benchmark:
-          requires:
-            - build
+      - test
+      - benchmark
       - publish:
           filters:
             branches:

@@ -10,6 +10,7 @@ executors:
       TZ: "America/Los_Angeles"
     docker:
       - image: cimg/rust:1.62.1
+    working_directory: /tmp
 
   ubuntu:
     environment:
@@ -53,9 +54,21 @@ jobs:
       - checkout
       - restore_cache:
           key: project-cache
+      - attach_workspace:
+          at: /tmp/benchmarks
+      - run:
+          name: restore benchmarks
+          command: cp /tmp/benchmarks ./target/criterion
       - run:
           name: run benchmarks
           command: cargo bench
+      - run:
+          name: save benchmarks
+          command: cp ./target/criterion /tmp/benchmarks
+      - persist_to_workspace:
+          root: benchmarks
+          paths:
+            - .
       - save_cache:
           key: project-cache
           paths:
@@ -130,11 +143,4 @@ jobs:
     executor: rust-app
     steps:
       - checkout
-      - restore_cache:
-          key: project-cache
       - rust/test
-      - save_cache:
-          key: project-cache
-          paths:
-            - "~/.cargo"
-            - "./target"

@@ -49,10 +49,15 @@ workflows:
 jobs:
   benchmark:
     executor: rust-app
+    environment:
+      MASTER_BRANCH_URL: git@github.com:Ruddickmg/heapz.git
     steps:
       - checkout
+      - run:
+          name: Checkout Master
+          command: git clone "$MASTER_BRANCH_URL"
       - restore_cache:
-          key: benchmark-cache-{{ checksum "Cargo.lock" }}
+          key: benchmark-cache-{{ checksum "heapz/Cargo.lock" }}
       - restore_cache:
           key: dependency-cache-{{ checksum "Cargo.lock" }}
       - run:

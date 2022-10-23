@@ -324,15 +324,21 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
     }
 
     fn set_next(&mut self, parent: Position, next: Position) {
-        self.get_node_mut(parent).map(|node| { node.next = next; });
+        self.get_node_mut(parent).map(|node| {
+            node.next = next;
+        });
     }
 
     fn set_left(&mut self, parent: Position, left: Position) {
-        self.get_node_mut(parent).map(|node| { node.left = left; });
+        self.get_node_mut(parent).map(|node| {
+            node.left = left;
+        });
     }
 
     fn set_parent(&mut self, child: Position, parent: Position) {
-        self.get_node_mut(child).map(|node| { node.parent = parent; });
+        self.get_node_mut(child).map(|node| {
+            node.parent = parent;
+        });
     }
 
     fn link_next(&mut self, parent: Position, next: Position) {

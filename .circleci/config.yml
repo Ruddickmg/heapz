@@ -10,6 +10,8 @@ executors:
       TZ: "America/Los_Angeles"
     docker:
       - image: cimg/rust:1.62.1
+    working_directory: .
+
   ubuntu:
     environment:
       PIPELINE_NUM: << pipeline.number >>
@@ -46,11 +48,22 @@ jobs:
     executor: rust-app
     steps:
       - checkout
+      - restore_cache:
+          key: project-cache
+      - attach_workspace:
+          at: ./target/criterion
       - run:
           name: run benchmarks
           command: cargo bench
-      - store_artifacts:
-          path: ~/target/criterion
+      - save_cache:
+          key: project-cache
+          paths:
+            - "~/.cargo"
+            - "./target"
+      - persist_to_workspace:
+          root: ./target/criterion
+          paths:
+            - .
 
   publish:
     executor: rust-app

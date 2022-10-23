@@ -380,12 +380,21 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
     }
 
     fn merge_trees(&mut self, parent: Position, child: Position) -> Position {
-        let left = self.get_left_index(parent);
         let rank = (self.get_rank(child) + 1) as usize;
-        self.link_next(child, left);
-        self.link_left(parent, child);
-        self.get_node_mut(parent).map(|node| node.set_rank(rank));
-        self.get_node_mut(child).map(|node| node.set_root(false));
+        let left = self.get_node_mut(parent).map(| node | {
+            let left = node.left;
+            node.left = child;
+            node.set_rank(rank);
+            left
+        }).unwrap();
+        self.get_node_mut(left).map(|node| {
+            node.parent = child;
+        });
+        self.get_node_mut(child).map(|node| {
+            node.parent = parent;
+            node.next = left;
+            node.set_root(false);
+        });
         parent
     }
 
@@ -588,15 +597,12 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
     fn add_root_to_list(&mut self, root: Position, list: Position) -> Position {
         self.get_node_mut(root).map(|node| node.set_root(true));
         if list.is_some() {
-            if let Some((parent, next)) = self.get_siblings(list) {
-                let is_new_root = self.compare(root, list);
-                self.link_next(if is_new_root { parent } else { list }, root);
-                self.link_next(root, if is_new_root { list } else { next });
-                if is_new_root {
-                    root
-                } else {
-                    list
-                }
+            let (parent, next) = self.get_siblings(list).unwrap();
+            let is_new_root = self.compare(root, list);
+            self.link_next(if is_new_root { parent } else { list }, root);
+            self.link_next(root, if is_new_root { list } else { next });
+            if is_new_root {
+                root
             } else {
                 list
             }

@@ -57,13 +57,13 @@ jobs:
           at: /tmp/benchmarks
       - run:
           name: restore benchmarks
-          command: cp /tmp/benchmarks ./target/criterion
+          command: cp -r /tmp/benchmarks ./target/criterion
       - run:
           name: run benchmarks
           command: cargo bench
       - run:
           name: save benchmarks
-          command: cp ./target/criterion /tmp/benchmarks
+          command: cp -r ./target/criterion /tmp/benchmarks
       - persist_to_workspace:
           root: benchmarks
           paths:

@@ -323,22 +323,32 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
             .map(|(parent, _, next)| (parent, next))
     }
 
-    fn link_next(&mut self, parent: Position, next: Position) {
+    fn set_next(&mut self, parent: Position, next: Position) {
         self.get_node_mut(parent).map(|node| {
             node.next = next;
         });
-        self.get_node_mut(next).map(|node| {
+    }
+
+    fn set_left(&mut self, parent: Position, left: Position) {
+        self.get_node_mut(parent).map(|node| {
+            node.left = left;
+        });
+    }
+
+    fn set_parent(&mut self, child: Position, parent: Position) {
+        self.get_node_mut(child).map(|node| {
             node.parent = parent;
         });
     }
 
+    fn link_next(&mut self, parent: Position, next: Position) {
+        self.set_next(parent, next);
+        self.set_parent(next, parent);
+    }
+
     fn link_left(&mut self, parent: Position, left: Position) {
-        self.get_node_mut(parent).map(|node| {
-            node.left = left;
-        });
-        self.get_node_mut(left).map(|node| {
-            node.parent = parent;
-        });
+        self.set_left(parent, left);
+        self.set_parent(left, parent);
     }
 
     fn compare_values<T: PartialOrd>(&self, value_a: T, value_b: T) -> bool {
@@ -357,38 +367,46 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
             })
     }
 
-    fn merge_trees(&mut self, parent: Position, child: Position) -> Position {
-        let rank = (self.get_rank(child) + 1) as usize;
-        let left = self
-            .get_node_mut(parent)
-            .map(|node| {
-                let left = node.left;
-                node.left = child;
-                node.rank = rank;
-                left
-            })
-            .unwrap();
-        self.get_node_mut(left).map(|node| {
-            node.parent = child;
-        });
-        self.get_node_mut(child).map(|node| {
-            node.parent = parent;
-            node.next = left;
-            node.root = false;
-        });
+    fn merge_trees(&mut self, node_a: Position, node_b: Position) -> Position {
+        assert_ne!(node_a, node_b);
+        let a = self.get_node_mut(node_a).unwrap() as *mut Node<K, V>;
+        let b = self.get_node_mut(node_b).unwrap() as *mut Node<K, V>;
+        let mut parent: Position;
+        let mut child: Position;
+        unsafe {
+            let mut parent_node: *mut Node<K, V>;
+            let mut child_node: *mut Node<K, V>;
+            let node_a_is_parent = if self.heap_type == HeapType::Max {
+                (*a).value > (*b).value
+            } else {
+                (*a).value < (*b).value
+            };
+            if node_a_is_parent {
+                parent = node_a;
+                child = node_b;
+                parent_node = a;
+                child_node = b;
+            } else {
+                parent = node_b;
+                child = node_a;
+                parent_node = b;
+                child_node = a;
+            }
+            let left_of_parent = (*parent_node).left;
+            (*parent_node).left = child;
+            (*parent_node).rank = (*child_node).rank + 1;
+            (*child_node).parent = parent;
+            (*child_node).next = left_of_parent;
+            (*child_node).root = false;
+            self.set_parent(left_of_parent, child);
+        }
         parent
     }
 
     fn link(&mut self, node_a: Position, node_b: Position) -> Position {
         if node_b != node_a {
             match (node_a, node_b) {
-                (Some(_), Some(_)) => {
-                    if self.compare(node_a, node_b) {
-                        self.merge_trees(node_a, node_b)
-                    } else {
-                        self.merge_trees(node_b, node_a)
-                    }
-                }
+                (Some(_), Some(_)) => self.merge_trees(node_a, node_b),
                 (Some(_), None) => node_a,
                 (None, Some(_)) => node_b,
                 _ => None,
@@ -440,14 +458,10 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
                                 node.next = next;
                                 node.left = left_of_last;
                             });
-                            self.get_node_mut(parent).map(|node| {
-                                node.next = position;
-                            });
-                            vec![next, left_of_last].into_iter().for_each(|sibling| {
-                                self.get_node_mut(sibling).map(|node| {
-                                    node.parent = position;
-                                });
-                            });
+                            self.set_next(parent, position);
+                            vec![next, left_of_last]
+                                .into_iter()
+                                .for_each(|sibling| self.set_parent(sibling, position));
                         } else {
                             self.link_left(position, left_of_last);
                         }
@@ -494,12 +508,8 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
                         node.next = next;
                         node.parent = parent_of_last;
                     });
-                    self.get_node_mut(left).map(|node| {
-                        node.parent = position;
-                    });
-                    self.get_node_mut(next).map(|node| {
-                        node.parent = position;
-                    });
+                    self.set_parent(left, position);
+                    self.set_parent(next, position);
                     self.get_node_mut(parent_of_last).map(|node| {
                         if is_left {
                             node.left = position;
@@ -606,35 +616,29 @@ impl<K: Hash + Eq + Clone, V: PartialOrd> RankPairingHeap<K, V> {
     }
 
     fn add_root_to_list(&mut self, root: Position, list: Position) -> Position {
-        if list.is_some() {
-            let (is_new_root, parent, next) = self
-                .get_node(root)
-                .zip(self.get_node(list))
-                .map(|(root_node, list_head)| {
-                    (
-                        self.compare_values(&root_node.value, &list_head.value),
-                        list_head.parent,
-                        list_head.next,
-                    )
-                })
-                .unwrap();
-            let parent = if is_new_root { parent } else { list };
-            let next = if is_new_root { list } else { next };
-            self.get_node_mut(parent).map(|node| {
-                node.next = root;
-            });
-            self.get_node_mut(root).map(|node| {
-                node.root = true;
-                node.next = next;
-                node.parent = parent;
-            });
-            self.get_node_mut(next).map(|node| {
-                node.parent = root;
-            });
-            if is_new_root {
-                root
-            } else {
-                list
+        if list.is_some() && root.is_some() {
+            let root_node = self.get_node_mut(root).unwrap() as *mut Node<K, V>;
+            let list_node = self.get_node_mut(list).unwrap() as *mut Node<K, V>;
+            unsafe {
+                let is_new_root = if self.heap_type == HeapType::Max {
+                    (*root_node).value > (*list_node).value
+                } else {
+                    (*root_node).value < (*list_node).value
+                };
+                let mut parent = (*list_node).parent;
+                let mut next = (*list_node).next;
+                parent = if is_new_root { parent } else { list };
+                next = if is_new_root { list } else { next };
+                self.set_next(parent, root);
+                (*root_node).root = true;
+                (*root_node).next = next;
+                (*root_node).parent = parent;
+                self.set_parent(next, root);
+                if is_new_root {
+                    root
+                } else {
+                    list
+                }
             }
         } else {
             self.get_node_mut(root).map(|node| {

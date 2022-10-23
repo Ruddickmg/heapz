@@ -54,20 +54,14 @@ jobs:
       - restore_cache:
           key: project-cache
       - attach_workspace:
-          at: /tmp/benchmarks
-      - run:
-          name: restore benchmarks
-          command: cp -r /tmp/benchmarks ./target/criterion
+          at: target
       - run:
           name: run benchmarks
           command: cargo bench
-      - run:
-          name: save benchmarks
-          command: cp -r ./target/criterion /tmp/benchmarks
       - persist_to_workspace:
-          root: benchmarks
+          root: target
           paths:
-            - .
+            - criterion
       - save_cache:
           key: project-cache
           paths:

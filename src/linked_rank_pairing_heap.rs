@@ -224,6 +224,58 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
         }
     }
 
+    fn unbox_node(node: NonNull<Node<K, P>>) -> Node<K, P> {
+        unsafe {
+            *Box::from_raw(node.as_ptr())
+        }
+    }
+
+    fn set_next(link: Link<K, P>, next: Link<K, P>) {
+        unsafe {
+            link.map(|node| { (*node.as_ptr()).next = next; });
+        }
+    }
+
+    fn set_parent(link: Link<K, P>, parent: Link<K, P>) {
+        unsafe {
+            link.map(|node| { (*node.as_ptr()).parent = parent; });
+        }
+    }
+
+    fn set_left(link: Link<K, P>, left: Link<K, P>) {
+        unsafe {
+            link.map(|node| { (*node.as_ptr()).left = left; });
+        }
+    }
+
+    fn link_next(parent: Link<K, P>, next: Link<K, P>) {
+        Self::set_next(parent, next);
+        Self::set_parent(next, parent);
+    }
+
+    fn link_left(parent: Link<K, P>, left: Link<K, P>) {
+        Self::set_parent(left, parent);
+        Self::set_left(parent, left);
+    }
+
+    fn get_parent(node: Link<K, P>) -> Link<K, P> {
+        unsafe {
+            node.map(|node| (*node.as_ptr()).parent).unwrap_or(None)
+        }
+    }
+
+    fn get_next(node: Link<K, P>) -> Link<K, P> {
+        unsafe {
+            node.map(|node| (*node.as_ptr()).next).unwrap_or(None)
+        }
+    }
+
+    fn get_left(node: Link<K, P>) -> Link<K, P> {
+        unsafe {
+            node.map(|node| (*node.as_ptr()).left).unwrap_or(None)
+        }
+    }
+
     fn compare(&self, node_a: NonNull<Node<K, P>>, node_b: NonNull<Node<K, P>>) -> bool {
         unsafe {
             if self.heap_type == HeapType::Max {
@@ -234,32 +286,24 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
         }
     }
 
-    fn unbox_node(node: NonNull<Node<K, P>>) -> Node<K, P> {
-        unsafe {
-            *Box::from_raw(node.as_ptr())
-        }
-    }
-
     fn concatenate_lists(head: Link<K, P>, tail: Link<K, P>, next: Link<K, P>) -> Link<K, P> {
-        unsafe {
-            match (head.zip(tail), next) {
-                (Some((front, back)), Some(node)) => {
-                    (*front.as_ptr()).parent = None;
-                    (*back.as_ptr()).next = next;
-                    (*node.as_ptr()).parent = tail;
-                    head
-                },
-                (Some((front, back)), None) => {
-                    (*front.as_ptr()).parent = None;
-                    (*back.as_ptr()).next = None;
-                    head
-                },
-                (None, Some(node)) => {
-                    (*node.as_ptr()).parent = None;
-                    next
-                },
-                _ => None
-            }
+        match (head.zip(tail), next) {
+            (Some((_, _)), Some(_)) => {
+                Self::set_parent(head, None);
+                Self::set_next(tail, next);
+                Self::set_parent(next, tail);
+                head
+            },
+            (Some((_, _)), None) => {
+                Self::set_parent(head, None);
+                Self::set_next(tail, None);
+                head
+            },
+            (None, Some(node)) => {
+                Self::set_parent(next, None);
+                next
+            },
+            _ => None
         }
     }
 
@@ -267,70 +311,50 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
         let node_a_is_parent = self.compare(node_a, node_b);
         let root = if node_a_is_parent { node_a } else { node_b };
         let child = if node_a_is_parent { node_b } else { node_a };
-        unsafe {
-            let left = (*root.as_ptr()).left;
-            Self::link_next(Some(child), left);
-            Self::link_left(Some(root), Some(child));
-            self.update_rank(child);
-            self.update_rank(root);
-        }
+        let left = Self::get_left(Some(root));
+        Self::link_next(Some(child), left);
+        Self::link_left(Some(root), Some(child));
+        self.update_rank(child);
+        self.update_rank(root);
         root
     }
 
     fn add_node_to_roots(&self, node: Link<K, P>, root: Link<K, P>) -> Link<K, P> {
         if let Some(new_node) = node {
-            unsafe {
-                if let Some(root_node) = root {
-                    Self::link_next((*root_node.as_ptr()).parent, node);
-                    Self::link_next(node, root);
-                    if self.compare(new_node, root_node) {
-                        node
-                    } else {
-                        root
-                    }
-                } else {
-                    Self::link_next(node, node);
+            if let Some(root_node) = root {
+                Self::link_next(Self::get_parent(root), node);
+                Self::link_next(node, root);
+                if self.compare(new_node, root_node) {
                     node
+                } else {
+                    root
                 }
+            } else {
+                Self::link_next(node, node);
+                node
             }
         } else {
             None
         }
     }
 
-    fn link_next(parent: Link<K, P>, next: Link<K, P>) {
-        unsafe {
-            next.map(|next_node| { (*next_node.as_ptr()).parent = parent; });
-            parent.map(|parent_node| { (*parent_node.as_ptr()).next = next; });
-        }
-    }
-
-    fn link_left(parent: Link<K, P>, left: Link<K, P>) {
-        unsafe {
-            left.map(|next_node| { (*next_node.as_ptr()).parent = parent; });
-            parent.map(|parent_node| { (*parent_node.as_ptr()).left = left; });
-        }
-    }
-
-    fn unlink_root(node: NonNull<Node<K, P>>) -> (Link<K, P>, Link<K, P>) {
-        unsafe {
-            let next = (*node.as_ptr()).next;
-            let parent = (*node.as_ptr()).parent;
-            (*node.as_ptr()).next = None;
-            (*node.as_ptr()).parent = None;
-            Self::link_next(parent, next);
-            (parent, next)
-        }
+    fn unlink_root(node: Link<K, P>) -> (Link<K, P>, Link<K, P>) {
+        let next = Self::get_next(node);
+        let parent = Self::get_parent(node);;
+        Self::set_next(node, None);
+        Self::set_parent(node, None);
+        Self::link_next(parent, next);
+        (parent, next)
     }
 
     fn multi_pass(&self, mut list: Link<K, P>) -> Link<K, P> {
-        let mut bucket = Bucket::new(self.size());
+        let mut bucket: Bucket<NonNull<Node<K, P>>> = Bucket::new(self.size());
         let mut root = None;
         while let Some(mut node) = list {
-            let mut rank = self.get_rank(Some(node));
-            let (_, next) = Self::unlink_root(node);
+            let mut rank = self.get_rank(list);
+            let (_, next) = Self::unlink_root(list);
             if let Some(matched) = bucket.remove(rank as usize) {
-                let _ = Self::unlink_root(matched);
+                let _ = Self::unlink_root(Some(matched));
                 node = self.link_nodes(node, matched);
                 rank = self.get_rank(Some(node));
             }
@@ -347,22 +371,21 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
     }
 
     fn single_pass(&self, mut list: Link<K, P>) -> Link<K, P> {
-        let mut bucket = Bucket::new(self.size());
+        let mut bucket: Bucket<NonNull<Node<K, P>>> = Bucket::new(self.size());
         let mut root = None;
-        while let Some(node) = list {
+        while let Some(mut node) = list {
             let rank = self.get_rank(Some(node));
-            let (_, next) = Self::unlink_root(node);
+            let (_, next) = Self::unlink_root(Some(node));
             if let Some(matched) = bucket.remove(rank as usize) {
-                let linked = self.link_nodes(node, matched);
-                root = self.add_node_to_roots(Some(linked), root);
+                let _ = Self::unlink_root(Some(matched));
+                node = self.link_nodes(node, matched);
             } else {
                 bucket.insert(rank as usize, node);
             }
+            root = self.add_node_to_roots(Some(node), root);
             list = next;
         }
-        bucket
-            .drain()
-            .fold(root, |list, node| self.add_node_to_roots(Some(node), list))
+        root
     }
 
     fn combine_ranks(&self, list: Link<K, P>) -> Link<K, P> {
@@ -727,6 +750,86 @@ mod multi_pass {
             assert_eq!((*third_child_4_next.as_ptr()).left, None);
             assert_eq!((*third_child_4_next.as_ptr()).next, None);
             assert_eq!((*third_child_4_next.as_ptr()).key, 3);
+        }
+    }
+}
+#[cfg(test)]
+mod single_pass {
+    use crate::{HeapPasses, HeapRank, HeapType};
+    use super::LinkedRankPairingHeap;
+
+    /*
+        key: 1, left: Some("3")
+        key: 4, left: Some("5")
+        key: 8, left: Some("9")
+        key: 6, left: Some("7")
+        key: 2, left: None
+     */
+
+    #[test]
+    fn heapify_a_list() {
+        let nums = vec![5,3,4,1,8,9,6,7,2];
+        let heap = LinkedRankPairingHeap {
+            heap_rank: HeapRank::One,
+            heap_type: HeapType::Min,
+            passes: HeapPasses::Single,
+            root: None,
+            keys: Default::default(),
+            len: nums.len(),
+            _phantom_priority: Default::default(),
+            _phantom_key: Default::default()
+        };
+        let list = nums
+            .into_iter()
+            .fold(None, | list, num | heap.add_node_to_roots(LinkedRankPairingHeap::create_node(num, num), list));
+        unsafe {
+            let root = heap.single_pass(LinkedRankPairingHeap::concatenate_lists(list, (*(list.unwrap()).as_ptr()).parent, None));
+
+            let first_root = root.unwrap();
+            let left_of_first = (*first_root.as_ptr()).left.unwrap();
+            let second_root = (*first_root.as_ptr()).next.unwrap();
+            let left_of_second = (*second_root.as_ptr()).left.unwrap();
+            let third_root = (*second_root.as_ptr()).next.unwrap();
+            let left_of_third = (*third_root.as_ptr()).left.unwrap();
+            let fourth_root = (*third_root.as_ptr()).next.unwrap();
+            let left_of_fourth = (*fourth_root.as_ptr()).left.unwrap();
+            let fifth_root = (*fourth_root.as_ptr()).next.unwrap();
+
+            assert_eq!((*first_root.as_ptr()).key, 1);
+
+            assert_eq!((*left_of_first.as_ptr()).key, 3);
+            assert_eq!((*left_of_first.as_ptr()).parent, root);
+            assert_eq!((*left_of_first.as_ptr()).left, None);
+            assert_eq!((*left_of_first.as_ptr()).next, None);
+
+            assert_eq!((*second_root.as_ptr()).key, 4);
+            assert_eq!((*second_root.as_ptr()).parent, root);
+
+            assert_eq!((*left_of_second.as_ptr()).key, 5);
+            assert_eq!((*left_of_second.as_ptr()).parent, Some(second_root));
+            assert_eq!((*left_of_second.as_ptr()).left, None);
+            assert_eq!((*left_of_second.as_ptr()).next, None);
+
+            assert_eq!((*third_root.as_ptr()).key, 8);
+            assert_eq!((*third_root.as_ptr()).parent, Some(second_root));
+
+            assert_eq!((*left_of_third.as_ptr()).key, 9);
+            assert_eq!((*left_of_third.as_ptr()).parent, Some(third_root));
+            assert_eq!((*left_of_third.as_ptr()).left, None);
+            assert_eq!((*left_of_third.as_ptr()).next, None);
+
+            assert_eq!((*fourth_root.as_ptr()).key, 6);
+            assert_eq!((*fourth_root.as_ptr()).parent, Some(third_root));
+
+            assert_eq!((*left_of_fourth.as_ptr()).key, 7);
+            assert_eq!((*left_of_fourth.as_ptr()).parent, Some(fourth_root));
+            assert_eq!((*left_of_fourth.as_ptr()).left, None);
+            assert_eq!((*left_of_fourth.as_ptr()).next, None);
+
+            assert_eq!((*fifth_root.as_ptr()).key, 2);
+            assert_eq!((*fifth_root.as_ptr()).parent, Some(fourth_root));
+            assert_eq!((*fifth_root.as_ptr()).next, root);
+            assert_eq!((*fifth_root.as_ptr()).left, None);
         }
     }
 }

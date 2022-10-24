@@ -230,6 +230,24 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
         }
     }
 
+    fn get_parent(node: Link<K, P>) -> Link<K, P> {
+        unsafe {
+            node.map(|node| (*node.as_ptr()).parent).unwrap_or(None)
+        }
+    }
+
+    fn get_next(node: Link<K, P>) -> Link<K, P> {
+        unsafe {
+            node.map(|node| (*node.as_ptr()).next).unwrap_or(None)
+        }
+    }
+
+    fn get_left(node: Link<K, P>) -> Link<K, P> {
+        unsafe {
+            node.map(|node| (*node.as_ptr()).left).unwrap_or(None)
+        }
+    }
+
     fn set_next(link: Link<K, P>, next: Link<K, P>) {
         unsafe {
             link.map(|node| { (*node.as_ptr()).next = next; });
@@ -256,24 +274,6 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
     fn link_left(parent: Link<K, P>, left: Link<K, P>) {
         Self::set_parent(left, parent);
         Self::set_left(parent, left);
-    }
-
-    fn get_parent(node: Link<K, P>) -> Link<K, P> {
-        unsafe {
-            node.map(|node| (*node.as_ptr()).parent).unwrap_or(None)
-        }
-    }
-
-    fn get_next(node: Link<K, P>) -> Link<K, P> {
-        unsafe {
-            node.map(|node| (*node.as_ptr()).next).unwrap_or(None)
-        }
-    }
-
-    fn get_left(node: Link<K, P>) -> Link<K, P> {
-        unsafe {
-            node.map(|node| (*node.as_ptr()).left).unwrap_or(None)
-        }
     }
 
     fn compare(&self, node_a: NonNull<Node<K, P>>, node_b: NonNull<Node<K, P>>) -> bool {
@@ -415,7 +415,7 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> Heap<K, P> for LinkedR
 
     fn top(&self) -> Option<&K> {
         unsafe {
-            Some(&(*self.root?.as_ptr()).key)
+            self.root.map(|node| &(*node.as_ptr()).key)
         }
     }
 

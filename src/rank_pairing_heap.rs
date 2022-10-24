@@ -1,5 +1,4 @@
-use crate::utils::Bucket;
-use crate::{DecreaseKey, Heap, HeapPasses, HeapRank, HeapType};
+use crate::{utils::Bucket, DecreaseKey, Heap, HeapPasses, HeapRank, HeapType};
 use std::{
     cmp::{max, Eq},
     collections::HashMap,

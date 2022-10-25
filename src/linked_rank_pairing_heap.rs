@@ -216,21 +216,30 @@ impl<K, P> LinkedRankPairingHeap<K, P>
 
     fn rank_node(&self, link: Link<K, P>) -> i32 {
         link.map(|node| {
-            unsafe {
-                let left_rank = self.get_rank((*node.as_ptr()).left);
-                let next_rank = if (*node.as_ptr()).is_root {
-                    left_rank
-                } else {
-                    self.get_rank((*node.as_ptr()).next)
-                };
-                self.rank(left_rank, next_rank)
-            }
+            let left_rank = self.get_rank(Self::get_left(link));
+            let next_rank = if Self::is_root(link) {
+                left_rank
+            } else {
+                self.get_rank(Self::get_next(link))
+            };
+            self.rank(left_rank, next_rank)
         }).unwrap_or(-1)
     }
 
     fn update_rank(&self, node: NonNull<Node<K, P>>) {
         unsafe {
             (*node.as_ptr()).rank = self.rank_node(Some(node));
+        }
+    }
+
+    fn update_ranks(&self, mut link: Link<K, P>) {
+        while let Some(node) = link {
+            self.update_rank(node);
+            if Self::is_root(link) {
+                link = None;
+            } else {
+                link = Self::get_parent(link);
+            }
         }
     }
 }
@@ -264,6 +273,18 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
     fn get_left(node: Link<K, P>) -> Link<K, P> {
         unsafe {
             node.map(|node| (*node.as_ptr()).left).unwrap_or(None)
+        }
+    }
+
+    fn is_root(node: Link<K, P>) -> bool {
+        unsafe {
+            node.map(|node| (*node.as_ptr()).is_root).unwrap_or(false)
+        }
+    }
+
+    fn set_priority(link: Link<K, P>, priority: P) {
+        unsafe {
+            link.map(|node| { (*node.as_ptr()).priority = priority; });
         }
     }
 
@@ -310,6 +331,16 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
                 (*node_a.as_ptr()).priority < (*node_b.as_ptr()).priority
             }
         }
+    }
+
+    fn can_update_priority(&self, link: &Link<K, P>, priority: &P) -> bool {
+        link.map(| node | unsafe {
+            if self.heap_type == HeapType::Max {
+                priority > &(*node.as_ptr()).priority
+            } else {
+                priority < &(*node.as_ptr()).priority
+            }
+        }).unwrap_or(false)
     }
 
     fn concatenate_lists(head: Link<K, P>, tail: Link<K, P>, next_head: Link<K, P>) -> Link<K, P> {
@@ -480,7 +511,16 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> Heap<K, P> for LinkedR
 
 impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> DecreaseKey<K, P> for LinkedRankPairingHeap<K, P> {
     fn update(&mut self, key: &K, priority: P) {
-        todo!()
+        if let Some(node) = self.keys.get(key) {
+            if self.can_update_priority(node, &priority) {
+                Self::set_priority(*node, priority);
+                if *node != self.root {
+                    let (parent, _) = Self::unlink_root(*node);
+                    self.update_ranks(parent);
+                    self.root = self.add_node_to_roots(*node, self.root);
+                }
+            }
+        };
     }
 
     fn delete(&mut self, key: &K) -> Option<K> {
@@ -1195,25 +1235,5 @@ mod single_pass {
             assert_eq!((*fifth_root.as_ptr()).next, root);
             assert_eq!((*fifth_root.as_ptr()).left, None);
         }
-    }
-}
-
-#[cfg(test)]
-mod pop {
-    use crate::{Heap, LinkedRankPairingHeap};
-
-    #[test]
-    fn removes_all_elements_based_on_priority_for_min_heap() {
-        let mut heap = LinkedRankPairingHeap::single_pass_max();
-        let numbers = vec![19, 23, 4, 34,36, 6, 3, 5, 1, 9, 35];
-        let mut cloned = numbers.clone();
-        numbers.into_iter().for_each(|n| {
-            let _ = &mut heap.push(n, n);
-        });
-        cloned.sort_by(|a, b| a.cmp(b));
-        while !cloned.is_empty() {
-            assert_eq!(heap.pop(), cloned.pop());
-        }
-        assert_eq!(heap.pop(), None);
     }
 }

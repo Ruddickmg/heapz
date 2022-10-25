@@ -181,6 +181,25 @@ impl<K, P> LinkedRankPairingHeap<K, P>
         })
     }
 
+    fn format_list(mut list: Link<K, P>) -> String {
+        let mut acc = vec![];
+        let mut seen = HashMap::new();
+        unsafe {
+            while let Some(node) = list {
+                let key = format!("{:?}", (*node.as_ptr()).key);
+                let next= (*node.as_ptr()).next;
+                if seen.contains_key(&key) {
+                    list = None;
+                } else {
+                    seen.insert(key.clone(), true);
+                    acc.push(key.clone());
+                    list = next;
+                }
+            }
+        }
+        format!("{:?}", acc)
+    }
+
     fn rank(&self, left: i32, next: i32) -> i32 {
         match self.heap_rank {
             HeapRank::One => Self::rank1(left, next),
@@ -266,6 +285,12 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
         }
     }
 
+    fn set_is_root(link: Link<K, P>, is_root: bool) {
+        unsafe {
+           link.map(|node| { (*node.as_ptr()).is_root = is_root; });
+        }
+    }
+
     fn link_next(parent: Link<K, P>, next: Link<K, P>) {
         Self::set_next(parent, next);
         Self::set_parent(next, parent);
@@ -274,6 +299,7 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
     fn link_left(parent: Link<K, P>, left: Link<K, P>) {
         Self::set_parent(left, parent);
         Self::set_left(parent, left);
+        Self::set_is_root(left, false);
     }
 
     fn compare(&self, node_a: NonNull<Node<K, P>>, node_b: NonNull<Node<K, P>>) -> bool {
@@ -286,12 +312,12 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
         }
     }
 
-    fn concatenate_lists(head: Link<K, P>, tail: Link<K, P>, next: Link<K, P>) -> Link<K, P> {
-        match (head.zip(tail), next) {
+    fn concatenate_lists(head: Link<K, P>, tail: Link<K, P>, next_head: Link<K, P>) -> Link<K, P> {
+        match (head.zip(tail), next_head) {
             (Some((_, _)), Some(_)) => {
                 Self::set_parent(head, None);
-                Self::set_next(tail, next);
-                Self::set_parent(next, tail);
+                Self::set_next(tail, next_head);
+                Self::set_parent(next_head, tail);
                 head
             },
             (Some((_, _)), None) => {
@@ -299,9 +325,9 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
                 Self::set_next(tail, None);
                 head
             },
-            (None, Some(node)) => {
-                Self::set_parent(next, None);
-                next
+            (None, Some(_)) => {
+                Self::set_parent(next_head, None);
+                next_head
             },
             _ => None
         }
@@ -321,6 +347,7 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
 
     fn add_node_to_roots(&self, node: Link<K, P>, root: Link<K, P>) -> Link<K, P> {
         if let Some(new_node) = node {
+            Self::set_is_root(node, true);
             if let Some(root_node) = root {
                 Self::link_next(Self::get_parent(root), node);
                 Self::link_next(node, root);
@@ -340,11 +367,23 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
 
     fn unlink_root(node: Link<K, P>) -> (Link<K, P>, Link<K, P>) {
         let next = Self::get_next(node);
-        let parent = Self::get_parent(node);;
+        let parent = Self::get_parent(node);
         Self::set_next(node, None);
         Self::set_parent(node, None);
-        Self::link_next(parent, next);
-        (parent, next)
+        if parent != node && next != node {
+            Self::link_next(parent, next);
+            (parent, next)
+        } else {
+            (None, None)
+        }
+    }
+
+    fn unlink_node(node: Link<K, P>) -> (Link<K, P>, Link<K, P>, Link<K, P>) {
+        let (parent, next) = Self::unlink_root(node);
+        let left = Self::get_left(node);
+        Self::set_parent(left, None);
+        Self::set_left(node, None);
+        (parent, next, left)
     }
 
     fn multi_pass(&self, mut list: Link<K, P>) -> Link<K, P> {
@@ -354,7 +393,8 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
             let mut rank = self.get_rank(list);
             let (_, next) = Self::unlink_root(list);
             if let Some(matched) = bucket.remove(rank as usize) {
-                let _ = Self::unlink_root(Some(matched));
+                let (_, next) = Self::unlink_root(Some(matched));
+                if root == Some(matched) { root = next; }
                 node = self.link_nodes(node, matched);
                 rank = self.get_rank(Some(node));
             }
@@ -365,7 +405,7 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
                 bucket.insert(rank as usize, node);
                 root = self.add_node_to_roots(Some(node), root);
                 next
-            }
+            };
         }
         root
     }
@@ -388,7 +428,7 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
         root
     }
 
-    fn combine_ranks(&self, list: Link<K, P>) -> Link<K, P> {
+    fn heapify(&self, list: Link<K, P>) -> Link<K, P> {
         if self.passes == HeapPasses::Single {
             self.single_pass(list)
         } else {
@@ -427,13 +467,10 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> Heap<K, P> for LinkedR
 
     fn pop(&mut self) -> Option<K> {
         self.root.map(| node | {
+            let (parent, next, left) = Self::unlink_node(Some(node));
             let removed = Self::unbox_node(node);
             self.keys.remove(&removed.key);
-            if removed.next == Some(node) {
-                self.root = self.add_node_to_roots(removed.left, None);
-            } else {
-                self.root = self.combine_ranks(Self::concatenate_lists(removed.next, removed.parent, removed.left));
-            }
+            self.root = self.heapify(Self::concatenate_lists(next, parent, left));
             self.len -= 1;
             removed.key
         })
@@ -661,6 +698,331 @@ mod link_nodes {
 }
 
 #[cfg(test)]
+mod unlink_root {
+    use crate::LinkedRankPairingHeap;
+
+    #[test]
+    fn removes_the_parent_node() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let _ = LinkedRankPairingHeap::unlink_root(node);
+            assert_eq!((*n.as_ptr()).parent, None);
+        }
+    }
+
+    #[test]
+    fn removes_the_next_node() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let _ = LinkedRankPairingHeap::unlink_root(node);
+            assert_eq!((*n.as_ptr()).next, None);
+        }
+    }
+
+    #[test]
+    fn returns_the_parent_node_if_not_linked_to_self() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let (returned_parent, _) = LinkedRankPairingHeap::unlink_root(node);
+            assert_eq!(returned_parent, parent);
+        }
+    }
+
+    #[test]
+    fn returns_the_next_node_if_not_linked_to_self() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let (_, returned_next) = LinkedRankPairingHeap::unlink_root(node);
+            assert_eq!(returned_next, next);
+        }
+    }
+
+    #[test]
+    fn links_the_parent_and_next_node_if_the_target_is_not_linked_to_itself() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let _ = LinkedRankPairingHeap::unlink_root(node);
+            assert_eq!((*(parent.unwrap()).as_ptr()).next, next);
+            assert_eq!((*(next.unwrap()).as_ptr()).parent, parent);
+        }
+    }
+
+    #[test]
+    fn will_not_link_a_node_back_to_itself() {
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = node;
+            (*n.as_ptr()).parent = node;
+            (*n.as_ptr()).left = left;
+            let _ = LinkedRankPairingHeap::unlink_root(node);
+            assert_eq!((*n.as_ptr()).parent, None);
+            assert_eq!((*n.as_ptr()).next, None);
+        }
+    }
+
+    #[test]
+    fn will_not_return_a_parent_if_linked_to_itself() {
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = node;
+            (*n.as_ptr()).parent = node;
+            (*n.as_ptr()).left = left;
+            let (returned_parent, _) = LinkedRankPairingHeap::unlink_root(node);
+            assert_eq!(returned_parent, None);
+        }
+    }
+
+    #[test]
+    fn will_not_return_next_if_linked_to_itself() {
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = node;
+            (*n.as_ptr()).parent = node;
+            (*n.as_ptr()).left = left;
+            let (_, returned_next) = LinkedRankPairingHeap::unlink_root(node);
+            assert_eq!(returned_next, None);
+        }
+    }
+
+    #[test]
+    fn does_not_change_the_left_node() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let _ = LinkedRankPairingHeap::unlink_root(node);
+            assert_eq!((*n.as_ptr()).left, left);
+        }
+    }
+}
+
+#[cfg(test)]
+mod unlink_node {
+    use crate::LinkedRankPairingHeap;
+
+    #[test]
+    fn removes_the_parent_node() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let _ = LinkedRankPairingHeap::unlink_node(node);
+            assert_eq!((*n.as_ptr()).parent, None);
+        }
+    }
+
+    #[test]
+    fn removes_the_next_node() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let _ = LinkedRankPairingHeap::unlink_node(node);
+            assert_eq!((*n.as_ptr()).next, None);
+        }
+    }
+
+    #[test]
+    fn returns_the_parent_node_if_not_linked_to_self() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let (returned_parent, _, _) = LinkedRankPairingHeap::unlink_node(node);
+            assert_eq!(returned_parent, parent);
+        }
+    }
+
+    #[test]
+    fn returns_the_next_node_if_not_linked_to_self() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let (_, returned_next, _) = LinkedRankPairingHeap::unlink_node(node);
+            assert_eq!(returned_next, next);
+        }
+    }
+
+    #[test]
+    fn links_the_parent_and_next_node_if_the_target_is_not_linked_to_itself() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let _ = LinkedRankPairingHeap::unlink_node(node);
+            assert_eq!((*(parent.unwrap()).as_ptr()).next, next);
+            assert_eq!((*(next.unwrap()).as_ptr()).parent, parent);
+        }
+    }
+
+    #[test]
+    fn will_not_link_a_node_back_to_itself() {
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = node;
+            (*n.as_ptr()).parent = node;
+            (*n.as_ptr()).left = left;
+            let _ = LinkedRankPairingHeap::unlink_node(node);
+            assert_eq!((*n.as_ptr()).parent, None);
+            assert_eq!((*n.as_ptr()).next, None);
+        }
+    }
+
+    #[test]
+    fn will_not_return_a_parent_if_linked_to_itself() {
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = node;
+            (*n.as_ptr()).parent = node;
+            (*n.as_ptr()).left = left;
+            let (returned_parent, _, _) = LinkedRankPairingHeap::unlink_node(node);
+            assert_eq!(returned_parent, None);
+        }
+    }
+
+    #[test]
+    fn will_not_return_next_if_linked_to_itself() {
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = node;
+            (*n.as_ptr()).parent = node;
+            (*n.as_ptr()).left = left;
+            let (_, returned_next, _) = LinkedRankPairingHeap::unlink_node(node);
+            assert_eq!(returned_next, None);
+        }
+    }
+
+    #[test]
+    fn removes_the_left_node() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let _ = LinkedRankPairingHeap::unlink_node(node);
+            assert_eq!((*n.as_ptr()).left, None);
+        }
+    }
+
+    #[test]
+    fn removes_the_left_nodes_parent() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            let l = left.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            (*l.as_ptr()).parent = node;
+            assert_eq!((*l.as_ptr()).parent, node);
+            let _ = LinkedRankPairingHeap::unlink_node(node);
+            assert_eq!((*l.as_ptr()).parent, None);
+        }
+    }
+
+    #[test]
+    fn returns_the_left_node() {
+        let parent = LinkedRankPairingHeap::create_node(1, 1);
+        let next = LinkedRankPairingHeap::create_node(2, 2);
+        let node = LinkedRankPairingHeap::create_node(3, 3);
+        let left = LinkedRankPairingHeap::create_node(4, 4);
+        unsafe {
+            let n = node.unwrap();
+            (*n.as_ptr()).next = next;
+            (*n.as_ptr()).parent = parent;
+            (*n.as_ptr()).left = left;
+            let (_, _, returned_left) = LinkedRankPairingHeap::unlink_node(node);
+            assert_eq!(returned_left, left);
+        }
+    }
+}
+
+#[cfg(test)]
 mod multi_pass {
     use crate::{HeapPasses, HeapRank, HeapType};
     use super::LinkedRankPairingHeap;
@@ -753,6 +1115,7 @@ mod multi_pass {
         }
     }
 }
+
 #[cfg(test)]
 mod single_pass {
     use crate::{HeapPasses, HeapRank, HeapType};
@@ -831,5 +1194,25 @@ mod single_pass {
             assert_eq!((*fifth_root.as_ptr()).next, root);
             assert_eq!((*fifth_root.as_ptr()).left, None);
         }
+    }
+}
+
+#[cfg(test)]
+mod pop {
+    use crate::{Heap, LinkedRankPairingHeap};
+
+    #[test]
+    fn removes_all_elements_based_on_priority_for_min_heap() {
+        let mut heap = LinkedRankPairingHeap::multi_pass_max();
+        let numbers = vec![19, 23, 4, 34,36, 6, 3, 5, 1, 9, 35];
+        let mut cloned = numbers.clone();
+        numbers.into_iter().for_each(|n| {
+            let _ = &mut heap.push(n, n);
+        });
+        cloned.sort_by(|a, b| a.cmp(b));
+        while !cloned.is_empty() {
+            assert_eq!(heap.pop(), cloned.pop());
+        }
+        assert_eq!(heap.pop(), None);
     }
 }

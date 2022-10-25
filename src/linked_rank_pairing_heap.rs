@@ -417,7 +417,8 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
             let rank = self.get_rank(Some(node));
             let (_, next) = Self::unlink_root(Some(node));
             if let Some(matched) = bucket.remove(rank as usize) {
-                let _ = Self::unlink_root(Some(matched));
+                let (parent, _) = Self::unlink_root(Some(matched));
+                if root == Some(matched) { root = parent; }
                 node = self.link_nodes(node, matched);
             } else {
                 bucket.insert(rank as usize, node);
@@ -1203,7 +1204,7 @@ mod pop {
 
     #[test]
     fn removes_all_elements_based_on_priority_for_min_heap() {
-        let mut heap = LinkedRankPairingHeap::multi_pass_max();
+        let mut heap = LinkedRankPairingHeap::single_pass_max();
         let numbers = vec![19, 23, 4, 34,36, 6, 3, 5, 1, 9, 35];
         let mut cloned = numbers.clone();
         numbers.into_iter().for_each(|n| {

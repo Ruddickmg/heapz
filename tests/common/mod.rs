@@ -11,7 +11,7 @@ pub enum Element {
 }
 
 fn generate_numbers() -> Vec<i32> {
-    let size = 10;
+    let size = 1000;
     let mut rng = rand::thread_rng();
     (0..size).map(|_| rng.gen::<i32>()).collect()
 }

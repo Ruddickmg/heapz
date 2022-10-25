@@ -282,6 +282,14 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
         }
     }
 
+    fn is_left(node: Link<K, P>) -> bool {
+        unsafe {
+            Self::get_parent(node)
+                .map(| parent | (*parent.as_ptr()).left == node)
+                .unwrap_or(false)
+        }
+    }
+
     fn set_priority(link: Link<K, P>, priority: P) {
         unsafe {
             link.map(|node| { (*node.as_ptr()).priority = priority; });
@@ -306,9 +314,9 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
         }
     }
 
-    fn set_is_root(link: Link<K, P>, is_root: bool) {
+    fn set_is_root(node: NonNull<Node<K, P>>, is_root: bool) {
         unsafe {
-           link.map(|node| { (*node.as_ptr()).is_root = is_root; });
+           (*node.as_ptr()).is_root = is_root;
         }
     }
 
@@ -320,7 +328,7 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
     fn link_left(parent: Link<K, P>, left: Link<K, P>) {
         Self::set_parent(left, parent);
         Self::set_left(parent, left);
-        Self::set_is_root(left, false);
+        left.map(| node | Self::set_is_root(node, false));
     }
 
     fn compare(&self, node_a: NonNull<Node<K, P>>, node_b: NonNull<Node<K, P>>) -> bool {
@@ -378,7 +386,7 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
 
     fn add_node_to_roots(&self, node: Link<K, P>, root: Link<K, P>) -> Link<K, P> {
         if let Some(new_node) = node {
-            Self::set_is_root(node, true);
+            Self::set_is_root(new_node, true);
             if let Some(root_node) = root {
                 Self::link_next(Self::get_parent(root), node);
                 Self::link_next(node, root);
@@ -407,6 +415,17 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> LinkedRankPairingHeap<
         } else {
             (None, None)
         }
+    }
+
+    fn unlink_tree(node: Link<K, P>) -> (Link<K, P>, Link<K, P>) {
+        let parent = Self::get_parent(node);
+        let next = Self::get_next(node);
+        if Self::is_left(node) {
+            Self::link_left(parent, next);
+        } else {
+            Self::link_next(parent, next);
+        }
+        (parent, next)
     }
 
     fn unlink_node(node: Link<K, P>) -> (Link<K, P>, Link<K, P>, Link<K, P>) {
@@ -515,7 +534,7 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> DecreaseKey<K, P> for 
             if self.can_update_priority(node, &priority) {
                 Self::set_priority(*node, priority);
                 if *node != self.root {
-                    let (parent, _) = Self::unlink_root(*node);
+                    let (parent, _) = Self::unlink_tree(*node);
                     self.update_ranks(parent);
                     self.root = self.add_node_to_roots(*node, self.root);
                 }
@@ -524,7 +543,17 @@ impl<K: Hash + Eq + Clone + Debug, P: PartialOrd + Debug> DecreaseKey<K, P> for 
     }
 
     fn delete(&mut self, key: &K) -> Option<K> {
-        todo!()
+        if let Some(node) = self.keys.remove(key) {
+            if !Self::is_root(node) {
+                let (parent, _) = Self::unlink_tree(node);
+                self.update_ranks(parent);
+                self.add_node_to_roots(node, self.root);
+            }
+            self.root = node;
+            self.pop()
+        } else {
+            None
+        }
     }
 }
 
